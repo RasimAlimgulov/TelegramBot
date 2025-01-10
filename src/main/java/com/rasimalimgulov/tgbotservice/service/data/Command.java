@@ -2,9 +2,9 @@ package com.rasimalimgulov.tgbotservice.service.data;
 
 
 public class Command {
-    public static final String START="/start";
-    public static final String REPORT="/report";// Отчет
-    public static final String SETTINGS="/settings";// Настройки и доступы
+    public static final String START_COMMAND ="/start";
+    public static final String REPORT_COMMAND ="/report";// Отчет
+    public static final String SETTINGS_COMMAND ="/settings";// Настройки и доступы
     public static final String MONTHLY_INCOME="/monthin"; // Ежемесячные доходы
     public static final String MONTHLY_EXPENSE="/monthexp";// Ежемесячные расходы
     public static final String ADDITIONAL_REPORTS = "/additionalreports"; // Дополнительные отчеты (по типу транзакции, периоду и виду денежных средств)
