@@ -1,5 +1,7 @@
 package com.rasimalimgulov.tgbotservice.service.factory;
 
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
@@ -11,7 +13,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class KeyboardFactory {
+
     public InlineKeyboardMarkup getInlineKeyboardMarkup(List<String> text, List<Integer> configuration, List<String> data) {
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
         int index = 0;
