@@ -41,9 +41,9 @@ public class CallbackQueryHandler {
                 return settingsManager.answerCallbackQuery(callbackQuery,bot);
             }
 
-            case INCOME, OUTCOME, TRANSACTION-> {System.out.println("Выполнился switch(TRANSACTION,INCOME,OUTCOME) в классе CallBackQueryHandler");
+            case INCOME, OUTCOME-> {System.out.println("Выполнился switch(INCOME,OUTCOME) в классе CallBackQueryHandler");
                                           return transactionManager.answerCallbackQuery(callbackQuery,bot);}
-            case LOGIN,PASSWORD -> { System.out.println("Выполнился switch(LOGIN,PASSWORD) в классе CallBackQueryHandler");
+            case LOGIN -> { System.out.println("Выполнился switch(LOGIN,PASSWORD) в классе CallBackQueryHandler");
                 return authenticationManager.answerCallbackQuery(callbackQuery,bot);
             }
         }

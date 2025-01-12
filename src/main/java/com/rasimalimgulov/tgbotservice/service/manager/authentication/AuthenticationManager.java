@@ -42,7 +42,7 @@ public class AuthenticationManager extends AbstractManager {
     }
 
     @Override
-    public BotApiMethod<?> answerMessage(Message message, Bot bot) {
+    public BotApiMethod<?> answerMessage(Message message, Bot bot) { // реакция на пришедшее сообщение.
         Long chatId = message.getChatId();
         UserSession session = userSessions.getOrDefault(chatId, new UserSession());
 
@@ -53,12 +53,13 @@ public class AuthenticationManager extends AbstractManager {
             userSessions.put(chatId, session);
             return methodFactory.getSendMessage(chatId, "Введите пароль:", null);
         } else if (session.isAwaitingPassword()) {
+                                                         /////Здесь можно добавить аутентификацию
             String login = session.getLogin();
             String password = message.getText();
             session.setAwaitingPassword(false);
             userSessions.put(chatId, session);
             return methodFactory.getSendMessage(chatId, String.format("Логин: %s\nПароль: %s\nДобро пожаловать!", login, password),
-                    keyboardFactory.getInlineKeyboardMarkup(List.of("Добавить доход","Добавить расход","Просмотреть отчёт","Настройки"),List.of(2,2),List.of(INCOME, OUTCOME,REPORT,SETTINGS)));
+                    keyboardFactory.getInlineKeyboardMarkup(List.of("Добавить доход","Добавить расход","Просмотреть отчёт","Настройки"),List.of(2,2),List.of(INCOME,OUTCOME,REPORT,SETTINGS)));
         }
 
         return methodFactory.getSendMessage(chatId, "Для начала авторизации нажмите кнопку 'Войти'.", null);
