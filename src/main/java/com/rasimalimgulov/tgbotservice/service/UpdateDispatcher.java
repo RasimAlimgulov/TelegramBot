@@ -27,6 +27,7 @@ public class UpdateDispatcher {
     }
 
     public BotApiMethod<?> distribute(Update update, Bot bot){
+        System.out.println("Выполняется метод разделения на команды,колбеки,сообщения в классе UpdateDispatcher");
         if (update.hasCallbackQuery()){
             return callbackQueryHandler.answer(update.getCallbackQuery(), bot);
         }

@@ -5,11 +5,7 @@ public class Command {
     public static final String START_COMMAND ="/start";
     public static final String REPORT_COMMAND ="/report";// Отчет
     public static final String SETTINGS_COMMAND ="/settings";// Настройки и доступы
-    public static final String MONTHLY_INCOME="/monthin"; // Ежемесячные доходы
-    public static final String MONTHLY_EXPENSE="/monthexp";// Ежемесячные расходы
-    public static final String ADDITIONAL_REPORTS = "/additionalreports"; // Дополнительные отчеты (по типу транзакции, периоду и виду денежных средств)
-    public static final String CHANGE_PROFILE_INFO = "/changeprof"; // Изменить данные профиля
-    public static final String VIEW_CURRENT_ACCESS_RIGHTS = "/checkaccessrights"; // Просмотреть текущие права доступа
-    public static final String CHANGE_PASSWORD = "/changepass";
+    public static final String TRANSACTION_COMMAND ="/transaction";
+    public static final String AUTHENTICATE_COMMAND ="/authenticate";
 
 }
