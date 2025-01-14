@@ -4,7 +4,6 @@ import com.rasimalimgulov.tgbotservice.service.manager.authentication.Authentica
 import com.rasimalimgulov.tgbotservice.service.manager.report.ReportManager;
 import com.rasimalimgulov.tgbotservice.service.manager.settings.SettingsManager;
 import com.rasimalimgulov.tgbotservice.service.manager.start.StartManager;
-import com.rasimalimgulov.tgbotservice.service.manager.transaction.MyTransactionManager;
 import com.rasimalimgulov.tgbotservice.telegram.Bot;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -23,14 +22,12 @@ public class CommandHandler {
     final ReportManager reportManager;
     final SettingsManager settingsManager;
     final StartManager startManager;
-    final MyTransactionManager transactionManager;
     final AuthenticationManager authenticationManager;
 
-    public CommandHandler(ReportManager reportManager, SettingsManager settingsManager, StartManager startManager, MyTransactionManager transactionManager, AuthenticationManager authenticationManager) {
+    public CommandHandler(ReportManager reportManager, SettingsManager settingsManager, StartManager startManager, AuthenticationManager authenticationManager) {
         this.reportManager = reportManager;
         this.settingsManager = settingsManager;
         this.startManager = startManager;
-        this.transactionManager = transactionManager;
         this.authenticationManager = authenticationManager;
     }
 
@@ -41,21 +38,6 @@ public class CommandHandler {
                 System.out.println("Выполнился блок START_COMMAND в классе CommandHandler");
                 return startManager.answerCommand(message, bot);
             }
-            case REPORT_COMMAND -> {
-                System.out.println("Выполнился блок REPORT_COMMAND в классе CommandHandler");
-                return reportManager.answerCommand(message, bot);
-            }
-            case SETTINGS_COMMAND -> {
-                return settingsManager.answerCommand(message, bot);
-            }
-            case TRANSACTION_COMMAND -> {
-                System.out.println("Выполнился блок TRANSACTION_COMMAND в классе CommandHandler");
-                return transactionManager.answerCommand(message, bot);
-            }
-            case AUTHENTICATE_COMMAND -> {
-                System.out.println("Выполнился блок AUTHENTICATE_COMMAND в классе CommandHandler");
-                return authenticationManager.answerCommand(message, bot);
-            }
             default -> {
                 return defaultAnswer(message);
             }
@@ -63,6 +45,6 @@ public class CommandHandler {
     }
 
     private BotApiMethod<?> defaultAnswer(Message message) {
-        return SendMessage.builder().chatId(message.getChatId()).text("Не поддерживаемая команда :(").build();
+        return SendMessage.builder().chatId(message.getChatId()).text("Для начала работы бота нажмите на /start").build();
     }
 }
