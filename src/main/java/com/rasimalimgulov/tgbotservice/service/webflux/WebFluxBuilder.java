@@ -8,6 +8,8 @@ public class WebFluxBuilder {
     private static final String urlApi="http://localhost:8081/";
 
     public boolean userExists(String username,String password) {
-        WebClient.create(urlApi/)
+        return WebClient.create(urlApi).post()
+                .uri("/authentication")
+                .bodyValue(new AuthRequest(username,password)).retrieve().bodyToMono(Boolean.class).block();
     }
 }

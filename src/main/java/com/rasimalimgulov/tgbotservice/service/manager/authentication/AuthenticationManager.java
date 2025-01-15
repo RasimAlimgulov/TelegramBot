@@ -3,6 +3,7 @@ package com.rasimalimgulov.tgbotservice.service.manager.authentication;
 import com.rasimalimgulov.tgbotservice.service.factory.AnswerMethodFactory;
 import com.rasimalimgulov.tgbotservice.service.factory.KeyboardFactory;
 import com.rasimalimgulov.tgbotservice.service.manager.AbstractManager;
+import com.rasimalimgulov.tgbotservice.service.webflux.WebFluxBuilder;
 import com.rasimalimgulov.tgbotservice.telegram.Bot;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -20,11 +21,13 @@ import static com.rasimalimgulov.tgbotservice.service.data.CallbackData.*;
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AuthenticationManager extends AbstractManager {
+    final WebFluxBuilder webClient;
     final AnswerMethodFactory methodFactory;
     final KeyboardFactory keyboardFactory;
     Map<Long, UserSession> userSessions = new ConcurrentHashMap<>();
 
-    public AuthenticationManager(AnswerMethodFactory methodFactory, KeyboardFactory keyboardFactory) {
+    public AuthenticationManager(WebFluxBuilder webClient, AnswerMethodFactory methodFactory, KeyboardFactory keyboardFactory) {
+        this.webClient = webClient;
         this.methodFactory = methodFactory;
         this.keyboardFactory = keyboardFactory;
     }
@@ -53,16 +56,19 @@ public class AuthenticationManager extends AbstractManager {
             userSessions.put(chatId, session);
             return methodFactory.getSendMessage(chatId, "Введите пароль:", null);
         } else if (session.isAwaitingPassword()) {
-                                                         /////Здесь можно добавить аутентификацию
+            /////Здесь можно добавить аутентификацию
             String login = session.getLogin();
             String password = message.getText();
-            session.setAwaitingPassword(false);
-            userSessions.put(chatId, session);
+            if(webClient.userExists(login,password)){
+                session.setAwaitingPassword(false);
+                userSessions.put(chatId, session);
+                return methodFactory.getSendMessage(chatId, String.format("Логин: %s\nПароль: %s\nДобро пожаловать!", login, password),
+                        keyboardFactory.getInlineKeyboardMarkup(List.of("Добавить доход","Добавить расход","Просмотреть отчёт","Настройки")
+                                ,List.of(2,2),List.of(INCOME,OUTCOME,REPORT,SETTINGS)));
+            }else{
+                return methodFactory.getSendMessage(chatId,"Не верный логин или пароль!",null);
+            }
 
-
-            return methodFactory.getSendMessage(chatId, String.format("Логин: %s\nПароль: %s\nДобро пожаловать!", login, password),
-                    keyboardFactory.getInlineKeyboardMarkup(List.of("Добавить доход","Добавить расход","Просмотреть отчёт","Настройки")
-                            ,List.of(2,2),List.of(INCOME,OUTCOME,REPORT,SETTINGS)));
         }
 
         return methodFactory.getSendMessage(chatId, "Для начала авторизации нажмите кнопку 'Войти'.", null);
