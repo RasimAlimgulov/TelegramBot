@@ -7,7 +7,10 @@ import com.rasimalimgulov.tgbotservice.service.webflux.WebFluxBuilder;
 import com.rasimalimgulov.tgbotservice.telegram.Bot;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -21,6 +24,7 @@ import static com.rasimalimgulov.tgbotservice.service.data.CallbackData.*;
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AuthenticationManager extends AbstractManager {
+    private static final Logger log = LoggerFactory.getLogger(AuthenticationManager.class);
     final WebFluxBuilder webClient;
     final AnswerMethodFactory methodFactory;
     final KeyboardFactory keyboardFactory;
@@ -59,7 +63,14 @@ public class AuthenticationManager extends AbstractManager {
             /////Здесь можно добавить аутентификацию
             String login = session.getLogin();
             String password = message.getText();
-            if(webClient.userExists(login,password)){
+            String jwt=null;
+            try{
+            jwt=webClient.userExists(login,password);}
+            catch (Exception e){
+                log.info("Ошибка при отправке запроса: "+e.getMessage());
+            }
+            log.info(jwt);
+            if(jwt!=null){
                 session.setAwaitingPassword(false);
                 userSessions.put(chatId, session);
                 return methodFactory.getSendMessage(chatId, String.format("Логин: %s\nПароль: %s\nДобро пожаловать!", login, password),

@@ -7,9 +7,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class WebFluxBuilder {
     private static final String urlApi="http://localhost:8081/";
 
-    public boolean userExists(String username,String password) {
+    public String userExists(String username, String password) {
         return WebClient.create(urlApi).post()
                 .uri("/authentication")
-                .bodyValue(new AuthRequest(username,password)).retrieve().bodyToMono(Boolean.class).block();
+                .bodyValue(new AuthRequest(username,password)).retrieve().bodyToMono(String.class).block();
     }
 }
