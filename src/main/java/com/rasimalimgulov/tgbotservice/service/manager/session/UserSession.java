@@ -1,21 +1,22 @@
-package com.rasimalimgulov.tgbotservice.service.manager.authentication;
+package com.rasimalimgulov.tgbotservice.service.manager.session;
 
 public class UserSession {
-    private String login;
+    private String username;
     private boolean awaitingLogin;
     private boolean awaitingPassword;
+    private String jwt;
 
     public UserSession() {
         this.awaitingLogin = false;
         this.awaitingPassword = false;
     }
 
-    public String getLogin() {
-        return login;
+    public String getUsername() {
+        return username;
     }
 
-    public void setLogin(String login) {
-        this.login = login;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public boolean isAwaitingLogin() {
@@ -33,5 +34,7 @@ public class UserSession {
     public void setAwaitingPassword(boolean awaitingPassword) {
         this.awaitingPassword = awaitingPassword;
     }
+    public String getJwt() {return jwt; }
+    public void setJwt(String jwt) {this.jwt = jwt;}
 }
 
