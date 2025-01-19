@@ -3,6 +3,9 @@ package com.rasimalimgulov.tgbotservice.service.manager.report;
 import com.rasimalimgulov.tgbotservice.service.factory.AnswerMethodFactory;
 import com.rasimalimgulov.tgbotservice.service.factory.KeyboardFactory;
 import com.rasimalimgulov.tgbotservice.service.manager.AbstractManager;
+import com.rasimalimgulov.tgbotservice.service.manager.session.UserSession;
+import com.rasimalimgulov.tgbotservice.service.manager.session.UserSessionManager;
+import com.rasimalimgulov.tgbotservice.service.webflux.WebFluxBuilder;
 import com.rasimalimgulov.tgbotservice.telegram.Bot;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -21,10 +24,14 @@ import static com.rasimalimgulov.tgbotservice.service.data.CallbackData.*;
 public class ReportManager extends AbstractManager {
     final AnswerMethodFactory methodFactory;
     final KeyboardFactory keyboardFactory;
+    final UserSessionManager userSessionManager;
+    final WebFluxBuilder webFluxBuilder;
 
-    public ReportManager(AnswerMethodFactory methodFactory, KeyboardFactory keyboardFactory) {
+    public ReportManager(AnswerMethodFactory methodFactory, KeyboardFactory keyboardFactory, UserSessionManager userSessionManager, WebFluxBuilder webFluxBuilder) {
         this.methodFactory = methodFactory;
         this.keyboardFactory = keyboardFactory;
+        this.userSessionManager = userSessionManager;
+        this.webFluxBuilder = webFluxBuilder;
     }
 
     @Override
@@ -42,8 +49,9 @@ public class ReportManager extends AbstractManager {
 
         switch (callbackData) {
             case INCOME:
+                userSessionManager.getSession(callbackQuery.getMessage().getChatId()).setAwaitingAmountMoney(true);
                 return methodFactory.getSendMessage(callbackQuery.getMessage().getChatId(),
-                        "Введите сумму",
+                        "Введите сумму полученной прибыли: ",
                         null);
 
             case OUTCOME:
@@ -69,6 +77,25 @@ public class ReportManager extends AbstractManager {
 
     @Override
     public BotApiMethod<?> answerMessage(Message message, Bot bot) {
+        Long chatId=message.getChatId();
+        UserSession session=userSessionManager.getSession(chatId);
+        if (session.isAwaitingAmountMoney()){
+            Integer amountMoney=Integer.valueOf(message.getText());
+            session.setAwaitingAmountMoney(false);
+            session.setAmountMoney(amountMoney);
+            session.setAwaitingCategory(true);
+            //Здесь делает запрос post для указания прибыли:
+            try {
+                if (webFluxBuilder.incomeRequest(chatId,session.getJwt(),amountMoney)){
+                    return methodFactory.getSendMessage(chatId, "Успешно добавили прибыль.", null);
+                }
+                else {
+                   return methodFactory.getSendMessage(chatId, "Произошла ошибка, попробуйте ещё раз", null);
+                }
+            }catch (Exception e){
+                log.info("Произошла ошибка при отправке");
+            }
+        }
         return null;
     }
 }

@@ -5,11 +5,17 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 @Component
 public class WebFluxBuilder {
-    private static final String urlApi="http://localhost:8081/";
+    private static final String urlApi = "http://localhost:8081/";
 
-    public String authenticate(String username, String password) {
+    public String authenticateRequest(String username, String password) {
         return WebClient.create(urlApi).post()
                 .uri("/authentication")
-                .bodyValue(new AuthRequest(username,password)).retrieve().bodyToMono(String.class).block();
+                .bodyValue(new AuthRequest(username, password)).retrieve().bodyToMono(String.class).block();
+    }
+
+    public boolean incomeRequest(Long chatId, String jwt, Integer amountMoney) {
+        return WebClient.create(urlApi).post()
+                .uri("/income")
+                .bodyValue(new IncomeRequest(chatId,amountMoney)).header("Authenticate","Bearer "+jwt).retrieve().bodyToMono(Boolean.class).block();
     }
 }

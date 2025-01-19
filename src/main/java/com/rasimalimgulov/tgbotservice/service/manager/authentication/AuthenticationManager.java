@@ -16,8 +16,6 @@ import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static com.rasimalimgulov.tgbotservice.service.data.CallbackData.*;
 
@@ -64,7 +62,7 @@ public class AuthenticationManager extends AbstractManager {
             String password = message.getText();
             String jwt = null;
             try {
-                jwt = webClient.authenticate(login, password);  // Отправляем запрос на API для аутентификации и получаем jwt при успешном аутен...
+                jwt = webClient.authenticateRequest(login, password);  // Отправляем запрос на API для аутентификации и получаем jwt при успешном аутен...
                 log.info("Получен jwt токен: " + jwt);
             } catch (Exception e) {
                 log.info("Ошибка при отправке запроса: " + e.getMessage());
