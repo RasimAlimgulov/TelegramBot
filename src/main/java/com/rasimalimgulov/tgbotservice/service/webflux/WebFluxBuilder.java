@@ -16,6 +16,6 @@ public class WebFluxBuilder {
     public boolean incomeRequest(Long chatId, String jwt, Integer amountMoney) {
         return WebClient.create(urlApi).post()
                 .uri("/income")
-                .bodyValue(new IncomeRequest(chatId,amountMoney)).header("Authenticate","Bearer "+jwt).retrieve().bodyToMono(Boolean.class).block();
+                .bodyValue(new IncomeRequest(chatId,amountMoney)).header("Authorization","Bearer "+jwt).retrieve().bodyToMono(Boolean.class).block();
     }
 }

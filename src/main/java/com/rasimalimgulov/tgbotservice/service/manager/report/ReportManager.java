@@ -84,6 +84,7 @@ public class ReportManager extends AbstractManager {
             session.setAwaitingAmountMoney(false);
             session.setAmountMoney(amountMoney);
             session.setAwaitingCategory(true);
+            userSessionManager.updateSession(chatId,session);
             //Здесь делает запрос post для указания прибыли:
             try {
                 if (webFluxBuilder.incomeRequest(chatId,session.getJwt(),amountMoney)){
@@ -93,7 +94,7 @@ public class ReportManager extends AbstractManager {
                    return methodFactory.getSendMessage(chatId, "Произошла ошибка, попробуйте ещё раз", null);
                 }
             }catch (Exception e){
-                log.info("Произошла ошибка при отправке");
+                log.info("Произошла ошибка при отправке: " + e.getMessage());
             }
         }
         return null;
