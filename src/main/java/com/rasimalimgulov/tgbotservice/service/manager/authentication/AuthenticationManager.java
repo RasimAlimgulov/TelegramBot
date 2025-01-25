@@ -71,7 +71,7 @@ public class AuthenticationManager extends AbstractManager {
                 session.setJwt(jwt);
                 session.setAwaitingPassword(false);
                 userSessionManager.updateSession(chatId, session); // Сохраняем jwt в сессию.
-                return methodFactory.getSendMessage(chatId, String.format("Логин: %s\nПароль: %s\nДобро пожаловать!", login, password),
+                return methodFactory.getSendMessage(chatId, String.format("Добро пожаловать %s!", login),
                         keyboardFactory.getInlineKeyboardMarkup(List.of("Добавить доход", "Добавить расход", "Просмотреть отчёт", "Настройки")
                                 , List.of(2, 2), List.of(INCOME, OUTCOME, REPORT, SETTINGS)));
             } else {

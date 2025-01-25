@@ -1,7 +1,11 @@
 package com.rasimalimgulov.tgbotservice.service.webflux;
 
+import com.rasimalimgulov.tgbotservice.entity.Client;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import java.util.List;
 
 @Component
 public class WebFluxBuilder {
@@ -18,4 +22,12 @@ public class WebFluxBuilder {
                 .uri("/income")
                 .bodyValue(new IncomeRequest(chatId,amountMoney)).header("Authorization","Bearer "+jwt).retrieve().bodyToMono(Boolean.class).block();
     }
+    public List<Client> getClients(String username,String jwt) {
+       return WebClient.create(urlApi)
+                .get()
+                .uri(uriBuilder -> uriBuilder.path("/clients").queryParam("username", username).build())
+                .header("Authorization", "Bearer " + jwt)
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<List<Client>>() {})
+                .block();}
 }

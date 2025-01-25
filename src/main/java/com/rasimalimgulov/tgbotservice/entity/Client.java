@@ -1,11 +1,15 @@
 package com.rasimalimgulov.tgbotservice.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "clients")
+@Getter
+@Setter
 public class Client {
 
     @Id

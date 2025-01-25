@@ -17,5 +17,4 @@ public class CallbackData {
     public static final String CATEGORY_TAX = "tax";
     public static final String CATEGORY_EXPENSE = "expense";
     public static final String CATEGORY_COMMISSION = "commission";
-
 }

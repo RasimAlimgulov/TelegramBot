@@ -25,7 +25,7 @@ public class MainController {
 
     @PostMapping("/")
     public BotApiMethod<?> listener(@RequestBody Update update) {
-        System.out.println("Получаем запрос из телеграмма в контроллере: "+update.getMessage()); // log4j2 не работает почему-то
+        System.out.println("Получаем запрос из телеграмма в контроллере: "+update.getMessage());
         return myBot.onWebhookUpdateReceived(update);
     }
 
