@@ -30,4 +30,6 @@ public class WebFluxBuilder {
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<List<Client>>() {})
                 .block();}
+
+    public List<ServiceTy>
 }

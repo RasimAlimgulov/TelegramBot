@@ -7,6 +7,9 @@ public class CallbackData {
     public static final String INCOME = "income";
     public static final String OUTCOME = "outcome";
 
+    public static final String ADD_CLIENT = "addClient";
+    public static final String REMOVE_CLIENT = "removeClient";
+
     public static final String TODAY = "day";
     public static final String WEEK = "week";
     public static final String MONTH = "month";

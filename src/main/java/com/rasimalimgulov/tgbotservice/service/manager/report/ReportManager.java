@@ -11,14 +11,11 @@ import com.rasimalimgulov.tgbotservice.telegram.Bot;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
-import org.glassfish.grizzly.http.util.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpClientErrorException;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,17 +39,13 @@ public class ReportManager extends AbstractManager {
 
     @Override
     public BotApiMethod<?> answerCallbackQuery(CallbackQuery callbackQuery, Bot bot) {
-        log.info("Выполняется метод answer в классе ReportManager");
-
         String callbackData = callbackQuery.getData();
-        log.info("Callback data: {}", callbackData);
-
         Long chatId = callbackQuery.getMessage().getChatId();
         UserSession session = userSessionManager.getSession(chatId);
 
         switch (callbackData) {
             case INCOME:
-                return handleIncome(callbackQuery, chatId, session);
+                return incomeMethod(callbackQuery, chatId, session);
 
             case OUTCOME:
                 return methodFactory.getEditMessageText(
@@ -82,19 +75,20 @@ public class ReportManager extends AbstractManager {
         }
     }
 
-    private BotApiMethod<?> handleIncome(CallbackQuery callbackQuery, Long chatId, UserSession session) {
+    private BotApiMethod<?> incomeMethod(CallbackQuery callbackQuery, Long chatId, UserSession session) {
         log.info("Обработка INCOME для chatId: {}", chatId);
         List<Client> clients;
         try {
-            clients = webFluxBuilder.getClients(session.getUsername(),session.getJwt());
+            clients = webFluxBuilder.getClients(session.getUsername(), session.getJwt());
         } catch (Exception e) {
 //            if (e.getMessage()== HttpStatus.)
             log.error("Ошибка при получении списка клиентов: {}", e.getMessage());
-            return methodFactory.getSendMessage(chatId, "Произошла ошибка при получении списка клиентов. Попробуйте позже.",null);
+            return methodFactory.getSendMessage(chatId, "Произошла ошибка при получении списка клиентов. Попробуйте позже.", null);
         }
 
         if (clients.isEmpty()) {
-            return methodFactory.getSendMessage(chatId, "У вас пока нет клиентов. Создайте нового клиента.",null);
+            return methodFactory.getSendMessage(chatId, "У вас пока нет клиентов. Создайте нового клиента."
+                    , keyboardFactory.getInlineKeyboardMarkup(List.of("Добавить клиента"), List.of(1), List.of("add_client")));
         }
 
         // Формирование списка клиентов для inline-клавиатуры
@@ -111,7 +105,7 @@ public class ReportManager extends AbstractManager {
                 "Выберите клиента из списка или создайте нового:",
                 keyboardFactory.getInlineKeyboardMarkup(
                         clientNames,
-                        List.of(1, clientNames.size()+1),
+                        List.of(1, clientNames.size() + 1),
                         clientCallbacks
                 )
         );
