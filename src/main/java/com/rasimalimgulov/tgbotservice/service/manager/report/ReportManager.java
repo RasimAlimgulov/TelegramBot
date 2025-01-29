@@ -1,6 +1,6 @@
 package com.rasimalimgulov.tgbotservice.service.manager.report;
 
-import com.rasimalimgulov.tgbotservice.entity.Client;
+import com.rasimalimgulov.tgbotservice.dto.Client;
 import com.rasimalimgulov.tgbotservice.service.factory.AnswerMethodFactory;
 import com.rasimalimgulov.tgbotservice.service.factory.KeyboardFactory;
 import com.rasimalimgulov.tgbotservice.service.manager.AbstractManager;
@@ -93,19 +93,23 @@ public class ReportManager extends AbstractManager {
 
         // Формирование списка клиентов для inline-клавиатуры
         List<String> clientNames = clients.stream()
-                .map(Client::getName)
+                .map(Client::getFullName)
                 .collect(Collectors.toList());
+        clientNames.add("Добавить");
+
+        log.info("Список имён: {}", clientNames);
 
         List<String> clientCallbacks = clients.stream()
                 .map(client -> "client_" + client.getId()) // Генерируем уникальное callbackData для каждого клиента
                 .collect(Collectors.toList());
-        clientCallbacks.add("add_client");
+        clientCallbacks.add(ADD_CLIENT_CONFIG);
+        log.info("Список кнопок"+clientCallbacks);
         return methodFactory.getSendMessage(
                 chatId,
                 "Выберите клиента из списка или создайте нового:",
                 keyboardFactory.getInlineKeyboardMarkup(
                         clientNames,
-                        List.of(1, clientNames.size() + 1),
+                        List.of(clientNames.size()),
                         clientCallbacks
                 )
         );

@@ -6,7 +6,7 @@ public class UserSession {
 
     private String newClientName;
     private String newClientPhone;
-
+    private String serviceTypeName;
 
 
     private Integer amountMoney;
@@ -17,14 +17,22 @@ public class UserSession {
     private boolean awaitingNameNewClient;
     private boolean awaitingPhoneNewClient;
 
-    private boolean awaitingServiceTypeNewClient;
+    private boolean awaitingNewServiceType;
 
 
     private boolean awaitingAmountMoney;
     private boolean awaitingCategory;
-
     public UserSession() {
     }
+
+    public String getServiceTypeName() {
+        return serviceTypeName;
+    }
+
+    public void setServiceTypeName(String serviceTypeName) {
+        this.serviceTypeName = serviceTypeName;
+    }
+
     public String getJwt() {
         return jwt;
     }
@@ -110,12 +118,12 @@ public class UserSession {
         this.newClientPhone = newClientPhone;
     }
 
-    public boolean isAwaitingServiceTypeNewClient() {
-        return awaitingServiceTypeNewClient;
+    public boolean isAwaitingNewServiceType() {
+        return awaitingNewServiceType;
     }
 
-    public void setAwaitingServiceTypeNewClient(boolean awaitingServiceTypeNewClient) {
-        this.awaitingServiceTypeNewClient = awaitingServiceTypeNewClient;
+    public void setAwaitingNewServiceType(boolean awaitingNewServiceType) {
+        this.awaitingNewServiceType = awaitingNewServiceType;
     }
 
     public String getCategory() {

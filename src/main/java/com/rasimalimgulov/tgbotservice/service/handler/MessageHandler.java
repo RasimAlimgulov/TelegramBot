@@ -2,7 +2,9 @@ package com.rasimalimgulov.tgbotservice.service.handler;
 
 import com.rasimalimgulov.tgbotservice.service.manager.authentication.AuthenticationManager;
 import com.rasimalimgulov.tgbotservice.service.manager.client.ClientManager;
+import com.rasimalimgulov.tgbotservice.service.manager.money.MoneyManager;
 import com.rasimalimgulov.tgbotservice.service.manager.report.ReportManager;
+import com.rasimalimgulov.tgbotservice.service.manager.servicetype.ServiceTypeManager;
 import com.rasimalimgulov.tgbotservice.service.manager.session.UserSession;
 import com.rasimalimgulov.tgbotservice.service.manager.session.UserSessionManager;
 import com.rasimalimgulov.tgbotservice.telegram.Bot;
@@ -17,12 +19,15 @@ public class MessageHandler {
     final ReportManager reportManager;
     final UserSessionManager sessionManager;
     final ClientManager clientManager;
-
-    public MessageHandler(AuthenticationManager authenticationManager, ReportManager reportManager, UserSessionManager sessionManager, ClientManager clientManager) {
+    final ServiceTypeManager serviceTypeManager;
+    final MoneyManager moneyManager;
+    public MessageHandler(AuthenticationManager authenticationManager, ReportManager reportManager, UserSessionManager sessionManager, ClientManager clientManager, ServiceTypeManager serviceTypeManager, MoneyManager moneyManager) {
         this.authenticationManager = authenticationManager;
         this.reportManager = reportManager;
         this.sessionManager = sessionManager;
         this.clientManager = clientManager;
+        this.serviceTypeManager = serviceTypeManager;
+        this.moneyManager = moneyManager;
     }
 
     public BotApiMethod<?> answer(Message message, Bot bot) {
@@ -30,12 +35,14 @@ public class MessageHandler {
         if (session.isAwaitingLogin() || session.isAwaitingPassword()) {
             return authenticationManager.answerMessage(message, bot);
         }
-        if (session.isAwaitingNameNewClient() || session.isAwaitingPhoneNewClient() || session.isAwaitingServiceTypeNewClient()){
+        if (session.isAwaitingNameNewClient() || session.isAwaitingPhoneNewClient()){
             return clientManager.answerMessage(message,bot);
         }
-
+        if (session.isAwaitingNewServiceType()){
+            return serviceTypeManager.answerMessage(message,bot);
+        }
             if (session.isAwaitingAmountMoney()) {
-                return reportManager.answerMessage(message, bot);
+                return moneyManager.answerMessage(message, bot);
             }
 
         return null;

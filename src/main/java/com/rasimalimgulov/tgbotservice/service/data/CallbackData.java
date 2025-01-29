@@ -7,8 +7,11 @@ public class CallbackData {
     public static final String INCOME = "income";
     public static final String OUTCOME = "outcome";
 
-    public static final String ADD_CLIENT = "addClient";
-    public static final String REMOVE_CLIENT = "removeClient";
+    public static final String ADD_CLIENT_CONFIG = "addClientConfiguration";
+    public static final String ADD_CLIENT_REQUEST = "addClientRequest";
+    public static final String ADD_TYPE_SERVICE= "addTypeService";
+
+    public static final String MONEY_COUNT= "moneyCount";
 
     public static final String TODAY = "day";
     public static final String WEEK = "week";
