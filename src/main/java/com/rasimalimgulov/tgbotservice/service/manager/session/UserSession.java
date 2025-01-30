@@ -1,5 +1,8 @@
 package com.rasimalimgulov.tgbotservice.service.manager.session;
 
+import com.rasimalimgulov.tgbotservice.service.manager.money.MoneyType;
+import com.rasimalimgulov.tgbotservice.service.manager.transaction.TransactionStatus;
+
 public class UserSession {
     private String username;
     private String jwt;
@@ -10,19 +13,31 @@ public class UserSession {
 
 
     private Integer amountMoney;
-    private String category;
+
     private boolean awaitingLogin;
     private boolean awaitingPassword;
 
     private boolean awaitingNameNewClient;
     private boolean awaitingPhoneNewClient;
-
     private boolean awaitingNewServiceType;
-
+    private MoneyType moneyType;
+    private long transaction_client_id;
+    private TransactionStatus transactionStatus;
+    private String comment;
 
     private boolean awaitingAmountMoney;
+    private boolean awaitingComment;
     private boolean awaitingCategory;
+    private String category;
     public UserSession() {
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 
     public String getServiceTypeName() {
@@ -31,6 +46,22 @@ public class UserSession {
 
     public void setServiceTypeName(String serviceTypeName) {
         this.serviceTypeName = serviceTypeName;
+    }
+
+    public boolean isAwaitingComment() {
+        return awaitingComment;
+    }
+
+    public void setAwaitingComment(boolean awaitingComment) {
+        this.awaitingComment = awaitingComment;
+    }
+
+    public TransactionStatus getTransactionStatus() {
+        return transactionStatus;
+    }
+
+    public void setTransactionStatus(TransactionStatus transactionStatus) {
+        this.transactionStatus = transactionStatus;
     }
 
     public String getJwt() {
@@ -124,6 +155,22 @@ public class UserSession {
 
     public void setAwaitingNewServiceType(boolean awaitingNewServiceType) {
         this.awaitingNewServiceType = awaitingNewServiceType;
+    }
+
+    public MoneyType getMoneyType() {
+        return moneyType;
+    }
+
+    public void setMoneyType(MoneyType moneyType) {
+        this.moneyType = moneyType;
+    }
+
+    public long getTransaction_client_id() {
+        return transaction_client_id;
+    }
+
+    public void setTransaction_client_id(long transaction_client_id) {
+        this.transaction_client_id = transaction_client_id;
     }
 
     public String getCategory() {

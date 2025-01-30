@@ -42,20 +42,36 @@ public class MoneyManager extends AbstractManager {
         String callbackData = callbackQuery.getData();
         Long chatId = callbackQuery.getMessage().getChatId();
         UserSession session = userSessionManager.getSession(chatId);
-
+        if (callbackData.contains("money_type")){
+            session.setMoneyType(MoneyType.valueOf(callbackData.split("_")[2].toUpperCase()));
+            userSessionManager.updateSession(chatId,session);
+            return answerMethodFactory.getSendMessage(chatId,"Укажите статус транзакции"
+                    , keyboardFactory.getInlineKeyboardMarkup(List.of("Предоплата","Запланировано","Финансовый долг","Постоплата")
+                            ,List.of(2,2),List.of("status_PREPAYMENT","status_SCHEDULED","status_FINANCIAL_DEBT","status_POSTPAYMENT")
+                    ));
+        }
         switch (callbackData) {
+            case MONEY_COUNT -> {
+                session.setAwaitingAmountMoney(true);
+                userSessionManager.updateSession(chatId, session);
+                return answerMethodFactory.getSendMessage(chatId, "Введите сумму", null);
+            }
         }
         return null;
     }
 
     @Override
     public BotApiMethod<?> answerMessage(Message message, Bot bot) {
-        Long chatId =message.getChatId();
+        Long chatId = message.getChatId();
         UserSession session = userSessionManager.getSession(chatId);
         if (session.isAwaitingAmountMoney()) {
             session.setAmountMoney(Integer.valueOf(message.getText()));
+            session.setAwaitingAmountMoney(false);
+            userSessionManager.updateSession(chatId, session);
+            log.info("Указали " + session.getAmountMoney());
+            return answerMethodFactory.getSendMessage(chatId, "Выберите вид оплаты"
+                    , keyboardFactory.getInlineKeyboardMarkup(List.of("Наличка", "Банк", "Карта"), List.of(3), List.of("money_type_cash", "money_type_bank", "money_type_card")));
         }
-        log.info("Указали "+session.getAmountMoney());
         return null;
     }
 

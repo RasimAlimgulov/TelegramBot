@@ -50,7 +50,9 @@ public class AuthenticationManager extends AbstractManager {
     @Override
     public BotApiMethod<?> answerMessage(Message message, Bot bot) { // реакция на пришедшее сообщение.
         Long chatId = message.getChatId();
-        UserSession session = userSessionManager.getSession(chatId); // Получаем сессию из менеджера сессий, если нет то вернёт новую сессию
+        UserSession session = userSessionManager.getSession(chatId);
+
+        // Получаем сессию из менеджера сессий, если нет то вернёт новую сессию
         if (session.isAwaitingLogin()) {  // Проверяем, ожидается ли ввод логина
             session.setUsername(message.getText());
             session.setAwaitingLogin(false);
@@ -94,4 +96,5 @@ public class AuthenticationManager extends AbstractManager {
         userSessionManager.updateSession(chatId, session);
         return methodFactory.getSendMessage(chatId, "Введите логин:", null);
     }
+
 }

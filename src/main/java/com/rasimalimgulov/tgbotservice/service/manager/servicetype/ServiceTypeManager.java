@@ -43,7 +43,13 @@ public class ServiceTypeManager extends AbstractManager {
         String callbackData = callbackQuery.getData();
         Long chatId = callbackQuery.getMessage().getChatId();
         UserSession session = userSessionManager.getSession(chatId);
-
+        if (callbackData.contains("serviceType_")){
+            session.setServiceTypeName(callbackData.split("_")[1]);
+            userSessionManager.updateSession(chatId,session);
+            return answerMethodFactory.getSendMessage(chatId,"Тип данных добавлен успешно. Имя клиента: " +
+                            ""+session.getNewClientName()+" Номер телефона: "+session.getNewClientPhone()+" Тип услуги: "+session.getServiceTypeName()
+                    ,keyboardFactory.getInlineKeyboardMarkup(List.of("Подтвердить"),List.of(1),List.of(ADD_CLIENT_REQUEST)));
+        }
         switch (callbackData) {
             case ADD_TYPE_SERVICE ->{
                   session.setAwaitingNewServiceType(true);

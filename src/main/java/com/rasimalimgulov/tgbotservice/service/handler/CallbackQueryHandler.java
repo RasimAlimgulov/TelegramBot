@@ -6,6 +6,7 @@ import com.rasimalimgulov.tgbotservice.service.manager.money.MoneyManager;
 import com.rasimalimgulov.tgbotservice.service.manager.report.ReportManager;
 import com.rasimalimgulov.tgbotservice.service.manager.servicetype.ServiceTypeManager;
 import com.rasimalimgulov.tgbotservice.service.manager.settings.SettingsManager;
+import com.rasimalimgulov.tgbotservice.service.manager.transaction.TransactionIOManager;
 import com.rasimalimgulov.tgbotservice.telegram.Bot;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -25,18 +26,32 @@ public class CallbackQueryHandler {
     final ClientManager clientManager;
     final ServiceTypeManager serviceTypeManager;
     final MoneyManager moneyManager;
-    public CallbackQueryHandler(SettingsManager settingsManager, ReportManager reportManager, AuthenticationManager authenticationManager, ClientManager clientManager, ServiceTypeManager serviceTypeManager, MoneyManager moneyManager) {
+    final TransactionIOManager transactionIOManager;
+    public CallbackQueryHandler(SettingsManager settingsManager, ReportManager reportManager, AuthenticationManager authenticationManager, ClientManager clientManager, ServiceTypeManager serviceTypeManager, MoneyManager moneyManager, TransactionIOManager transactionIOManager) {
         this.settingsManager = settingsManager;
         this.reportManager = reportManager;
         this.authenticationManager = authenticationManager;
         this.clientManager = clientManager;
         this.serviceTypeManager = serviceTypeManager;
         this.moneyManager = moneyManager;
+        this.transactionIOManager = transactionIOManager;
     }
 
     public BotApiMethod<?> answer(CallbackQuery callbackQuery, Bot bot) {
         String callbackData = callbackQuery.getData();
         System.out.println("Выполняется метод answer класса CallBackQueryHandler");
+        if (callbackData.contains("client_")){
+            return clientManager.answerCallbackQuery(callbackQuery,bot);
+        }
+        if (callbackData.contains("serviceType_")){
+            return serviceTypeManager.answerCallbackQuery(callbackQuery,bot);
+        }
+        if (callbackData.contains("status_")) {
+            return transactionIOManager.answerCallbackQuery(callbackQuery,bot);
+        }
+        if (callbackData.contains("money_type")) {
+         return moneyManager.answerCallbackQuery(callbackQuery,bot);
+        }
         switch (callbackData) {
             case LOGIN -> {
                 return authenticationManager.answerCallbackQuery(callbackQuery, bot);
@@ -53,9 +68,6 @@ public class CallbackQueryHandler {
             case MONEY_COUNT -> {
                 return moneyManager.answerCallbackQuery(callbackQuery,bot);
             }
-//            case SETTINGS -> {
-//                return settingsManager.answerCallbackQuery(callbackQuery, bot);
-//            }
         }
         return null;
     }
