@@ -10,9 +10,9 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class IncomeRequest {
     Long chatId;
-    Integer amountMoney;
+    Double amountMoney;
 
-    public IncomeRequest(Long chatId, Integer amountMoney) {
+    public IncomeRequest(Long chatId, Double amountMoney) {
         this.chatId = chatId;
         this.amountMoney = amountMoney;
     }

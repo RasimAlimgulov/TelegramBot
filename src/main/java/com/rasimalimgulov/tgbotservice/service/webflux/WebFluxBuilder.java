@@ -2,6 +2,9 @@ package com.rasimalimgulov.tgbotservice.service.webflux;
 
 import com.rasimalimgulov.tgbotservice.dto.Client;
 import com.rasimalimgulov.tgbotservice.dto.ServiceType;
+import com.rasimalimgulov.tgbotservice.dto.TransactionIncome;
+import com.rasimalimgulov.tgbotservice.dto.TransactionType;
+import com.rasimalimgulov.tgbotservice.service.manager.session.UserSession;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -18,7 +21,7 @@ public class WebFluxBuilder {
                 .bodyValue(new AuthRequest(username, password)).retrieve().bodyToMono(String.class).block();
     }
 
-    public boolean incomeRequest(Long chatId, String jwt, Integer amountMoney) {
+    public boolean incomeRequest(Long chatId, String jwt, Double amountMoney) {
         return WebClient.create(urlApi).post()
                 .uri("/income")
                 .bodyValue(new IncomeRequest(chatId, amountMoney)).header("Authorization", "Bearer " + jwt).retrieve().bodyToMono(Boolean.class).block();
@@ -62,5 +65,17 @@ public class WebFluxBuilder {
                 .header("Authorization", "Bearer " + jwt)
                 .retrieve()
                 .bodyToMono(Client.class).block();
+    }
+    public TransactionIncome addNewTransactionIncome(UserSession session) {
+        return WebClient.create(urlApi)
+                .post()
+                .uri("/addincome").bodyValue(new TransactionIncome(
+                        TransactionType.INCOME
+                        ,session.getAmountMoney()
+                        ,session.getTransaction_client_id()
+                        ,session.getTransactionStatus().toString(),session.getComment(),null,session.getMoneyType(),session.getUsername()))
+                .header("Authorization", "Bearer " + session.getJwt())
+                .retrieve()
+                .bodyToMono(TransactionIncome.class).block();
     }
 }

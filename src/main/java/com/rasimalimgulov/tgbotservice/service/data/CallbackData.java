@@ -4,6 +4,7 @@ public class CallbackData {
     public static final String REPORT = "report";
     public static final String SETTINGS = "settings";
     public static final String LOGIN = "login";
+    public static final String MAIN_PAGE = "main_page";
     public static final String INCOME = "income";
     public static final String OUTCOME = "outcome";
 

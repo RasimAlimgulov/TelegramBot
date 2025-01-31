@@ -120,7 +120,7 @@ public class ReportManager extends AbstractManager {
         Long chatId = message.getChatId();
         UserSession session = userSessionManager.getSession(chatId);
         if (session.isAwaitingAmountMoney()) {
-            Integer amountMoney = Integer.valueOf(message.getText());
+            Double amountMoney = Double.valueOf(message.getText());
             session.setAwaitingAmountMoney(false);
             session.setAmountMoney(amountMoney);
             session.setAwaitingCategory(true);

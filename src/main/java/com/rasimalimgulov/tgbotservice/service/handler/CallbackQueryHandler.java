@@ -6,6 +6,7 @@ import com.rasimalimgulov.tgbotservice.service.manager.money.MoneyManager;
 import com.rasimalimgulov.tgbotservice.service.manager.report.ReportManager;
 import com.rasimalimgulov.tgbotservice.service.manager.servicetype.ServiceTypeManager;
 import com.rasimalimgulov.tgbotservice.service.manager.settings.SettingsManager;
+import com.rasimalimgulov.tgbotservice.service.manager.start.StartManager;
 import com.rasimalimgulov.tgbotservice.service.manager.transaction.TransactionIOManager;
 import com.rasimalimgulov.tgbotservice.telegram.Bot;
 import lombok.AccessLevel;
@@ -27,7 +28,8 @@ public class CallbackQueryHandler {
     final ServiceTypeManager serviceTypeManager;
     final MoneyManager moneyManager;
     final TransactionIOManager transactionIOManager;
-    public CallbackQueryHandler(SettingsManager settingsManager, ReportManager reportManager, AuthenticationManager authenticationManager, ClientManager clientManager, ServiceTypeManager serviceTypeManager, MoneyManager moneyManager, TransactionIOManager transactionIOManager) {
+    final StartManager startManager;
+    public CallbackQueryHandler(SettingsManager settingsManager, ReportManager reportManager, AuthenticationManager authenticationManager, ClientManager clientManager, ServiceTypeManager serviceTypeManager, MoneyManager moneyManager, TransactionIOManager transactionIOManager, StartManager startManager) {
         this.settingsManager = settingsManager;
         this.reportManager = reportManager;
         this.authenticationManager = authenticationManager;
@@ -35,6 +37,7 @@ public class CallbackQueryHandler {
         this.serviceTypeManager = serviceTypeManager;
         this.moneyManager = moneyManager;
         this.transactionIOManager = transactionIOManager;
+        this.startManager = startManager;
     }
 
     public BotApiMethod<?> answer(CallbackQuery callbackQuery, Bot bot) {
@@ -53,6 +56,9 @@ public class CallbackQueryHandler {
          return moneyManager.answerCallbackQuery(callbackQuery,bot);
         }
         switch (callbackData) {
+            case MAIN_PAGE -> {
+                return startManager.answerCallbackQuery(callbackQuery,bot);
+            }
             case LOGIN -> {
                 return authenticationManager.answerCallbackQuery(callbackQuery, bot);
             }
@@ -67,6 +73,9 @@ public class CallbackQueryHandler {
             }
             case MONEY_COUNT -> {
                 return moneyManager.answerCallbackQuery(callbackQuery,bot);
+            }
+            case TRANSACTION_INCOME_REQUEST -> {
+                return transactionIOManager.answerCallbackQuery(callbackQuery, bot);
             }
         }
         return null;

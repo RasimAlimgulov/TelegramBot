@@ -25,6 +25,7 @@ public class StartManager extends AbstractManager {
         this.methodFactory = methodFactory;
         this.keyboardFactory = keyboardFactory;
     }
+
     public BotApiMethod<?> answerCommand(Message message, Bot bot) {
         System.out.println("Выполняется метод answer(ответ) в классе StartManager");
         return methodFactory.getSendMessage(message.getChatId(),
@@ -34,6 +35,7 @@ public class StartManager extends AbstractManager {
                         """, keyboardFactory.getInlineKeyboardMarkup(List.of("Войти"),
                         List.of(1),
                         List.of(LOGIN)));
+
     }
 
     @Override
@@ -43,6 +45,15 @@ public class StartManager extends AbstractManager {
 
     @Override
     public BotApiMethod<?> answerCallbackQuery(CallbackQuery callbackQuery, Bot bot) {
+        Long chatId = callbackQuery.getMessage().getChatId();
+        String callbackData = callbackQuery.getData();
+        switch (callbackData) {
+            case MAIN_PAGE -> {
+                return methodFactory.getSendMessage(chatId, String.format("Выберите дальнейшее действие: "),
+                        keyboardFactory.getInlineKeyboardMarkup(List.of("Добавить доход", "Добавить расход", "Просмотреть отчёт", "Настройки")
+                                , List.of(2, 2), List.of(INCOME, OUTCOME, REPORT, SETTINGS)));
+            }
+        }
         return null;
     }
 }

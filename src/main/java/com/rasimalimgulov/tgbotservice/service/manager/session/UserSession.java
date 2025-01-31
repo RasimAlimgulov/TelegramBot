@@ -12,7 +12,7 @@ public class UserSession {
     private String serviceTypeName;
 
 
-    private Integer amountMoney;
+    private double amountMoney;
 
     private boolean awaitingLogin;
     private boolean awaitingPassword;
@@ -103,11 +103,11 @@ public class UserSession {
         this.awaitingPassword = awaitingPassword;
     }
 
-    public Integer getAmountMoney() {
+    public double getAmountMoney() {
         return amountMoney;
     }
 
-    public void setAmountMoney(Integer amountMoney) {
+    public void setAmountMoney(Double amountMoney) {
         this.amountMoney = amountMoney;
     }
     public boolean getAwaitingCategory() {

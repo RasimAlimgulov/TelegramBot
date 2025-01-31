@@ -40,12 +40,28 @@ public class TransactionIOManager extends AbstractManager {
         String callbackData = callbackQuery.getData();
         Long chatId = callbackQuery.getMessage().getChatId();
         UserSession session = userSessionManager.getSession(chatId);
-        String[] transactionStatus=callbackData.split("_");
+        String[] transactionStatus = callbackData.split("_");
         if (callbackData.contains("status_")) {
-            session.setTransactionStatus(TransactionStatus.valueOf(transactionStatus.length==2?transactionStatus[1]:transactionStatus[1]+"_"+transactionStatus[2]));
+            session.setTransactionStatus(TransactionStatus.valueOf(transactionStatus.length == 2 ? transactionStatus[1] : transactionStatus[1] + "_" + transactionStatus[2]));
             session.setAwaitingComment(true);
-            userSessionManager.updateSession(chatId,session);
-            return answerMethodFactory.getSendMessage(chatId,"Оставьте коментарий:",null);
+            userSessionManager.updateSession(chatId, session);
+            return answerMethodFactory.getSendMessage(chatId, "Оставьте коментарий:", null);
+        }
+
+        switch (callbackData) {
+            case TRANSACTION_INCOME_REQUEST -> {
+                Object transactionResult = null;
+                try {
+                    transactionResult = webFluxBuilder.addNewTransactionIncome(session);
+                } catch (Exception e) {
+                    log.info(e.getMessage());
+                    return answerMethodFactory.getSendMessage(chatId, "Не получилось отправить транзакцию", null);
+                }
+                log.info(transactionResult);
+
+                return answerMethodFactory.getSendMessage(chatId, "Поздравляю, мы успешно сохранили доход.Выберите дальнейшее действие:",
+                        keyboardFactory.getInlineKeyboardMarkup(List.of("Добавить еще один доход", "Главное меню"), List.of(2), List.of(INCOME, MAIN_PAGE)));
+            }
         }
 
         return null;
@@ -53,19 +69,19 @@ public class TransactionIOManager extends AbstractManager {
 
     @Override
     public BotApiMethod<?> answerMessage(Message message, Bot bot) {
-        Long chatId=message.getChatId();
+        Long chatId = message.getChatId();
         UserSession session = userSessionManager.getSession(chatId);
-        if (session.isAwaitingComment()){
+        if (session.isAwaitingComment()) {
             session.setComment(message.getText());
-            userSessionManager.updateSession(chatId,session);
+            userSessionManager.updateSession(chatId, session);
 
-            log.info("client_id="+session.getTransaction_client_id()+" money_count="+session.getAmountMoney()
-                    +" тип денег="+session.getMoneyType()+" тип услуги="+session.getServiceTypeName()
-                    +" статус транзакции="+session.getTransactionStatus()+" Комментарий="+session.getComment());
-            return answerMethodFactory.getSendMessage(chatId,"Подтвердите создание дохода: "+"client_id="+session.getTransaction_client_id()+" money_count="+session.getAmountMoney()
-                            +" тип денег="+session.getMoneyType()+" тип услуги="+session.getServiceTypeName()
-                            +" статус транзакции="+session.getTransactionStatus()+" Комментарий="+session.getComment(),
-                    keyboardFactory.getInlineKeyboardMarkup(List.of("Подтвердить"),List.of(1),List.of(TRANSACTION_INCOME_REQUEST)));
+            log.info("client_id=" + session.getTransaction_client_id() + " money_count=" + session.getAmountMoney()
+                    + " тип денег=" + session.getMoneyType() + " тип услуги=" + session.getServiceTypeName()
+                    + " статус транзакции=" + session.getTransactionStatus() + " Комментарий=" + session.getComment());
+            return answerMethodFactory.getSendMessage(chatId, "Подтвердите создание дохода: " + "client_id=" + session.getTransaction_client_id() + " money_count=" + session.getAmountMoney()
+                            + " тип денег=" + session.getMoneyType() + " тип услуги=" + session.getServiceTypeName()
+                            + " статус транзакции=" + session.getTransactionStatus() + " Комментарий=" + session.getComment(),
+                    keyboardFactory.getInlineKeyboardMarkup(List.of("Подтвердить"), List.of(1), List.of(TRANSACTION_INCOME_REQUEST)));
         }
         return null;
     }

@@ -65,7 +65,7 @@ public class MoneyManager extends AbstractManager {
         Long chatId = message.getChatId();
         UserSession session = userSessionManager.getSession(chatId);
         if (session.isAwaitingAmountMoney()) {
-            session.setAmountMoney(Integer.valueOf(message.getText()));
+            session.setAmountMoney(Double.valueOf(message.getText()));
             session.setAwaitingAmountMoney(false);
             userSessionManager.updateSession(chatId, session);
             log.info("Указали " + session.getAmountMoney());
