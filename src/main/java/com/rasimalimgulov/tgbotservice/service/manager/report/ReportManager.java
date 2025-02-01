@@ -1,6 +1,7 @@
 package com.rasimalimgulov.tgbotservice.service.manager.report;
 
 import com.rasimalimgulov.tgbotservice.dto.Client;
+import com.rasimalimgulov.tgbotservice.dto.ExpenseCategory;
 import com.rasimalimgulov.tgbotservice.service.factory.AnswerMethodFactory;
 import com.rasimalimgulov.tgbotservice.service.factory.KeyboardFactory;
 import com.rasimalimgulov.tgbotservice.service.manager.AbstractManager;
@@ -48,15 +49,7 @@ public class ReportManager extends AbstractManager {
                 return incomeMethod(callbackQuery, chatId, session);
 
             case OUTCOME:
-                return methodFactory.getEditMessageText(
-                        callbackQuery,
-                        "Выберите категорию",
-                        keyboardFactory.getInlineKeyboardMarkup(
-                                List.of("Зарплата", "Реклама", "Налоги", "Бытовые расходы", "Комиссия", "Назад"),
-                                List.of(3, 2),
-                                List.of(CATEGORY_SALARY, CATEGORY_ADS, CATEGORY_TAX, CATEGORY_EXPENSE, CATEGORY_COMMISSION, LOGIN)
-                        )
-                );
+              return outcomeMethod(callbackQuery, chatId, session);
 
             case REPORT:
                 return methodFactory.getEditMessageText(
@@ -77,33 +70,35 @@ public class ReportManager extends AbstractManager {
 
     private BotApiMethod<?> incomeMethod(CallbackQuery callbackQuery, Long chatId, UserSession session) {
         log.info("Обработка INCOME для chatId: {}", chatId);
-        List<Client> clients;
+        List<Client> expenseCategies;
         try {
-            clients = webFluxBuilder.getClients(session.getUsername(), session.getJwt());
+            expenseCategies = webFluxBuilder.getClients(session.getUsername(), session.getJwt());
         } catch (Exception e) {
 //            if (e.getMessage()== HttpStatus.)
             log.error("Ошибка при получении списка клиентов: {}", e.getMessage());
             return methodFactory.getSendMessage(chatId, "Произошла ошибка при получении списка клиентов. Попробуйте позже.", null);
         }
 
-        if (clients.isEmpty()) {
+        if (expenseCategies.isEmpty()) {
             return methodFactory.getSendMessage(chatId, "У вас пока нет клиентов. Создайте нового клиента."
                     , keyboardFactory.getInlineKeyboardMarkup(List.of("Добавить клиента"), List.of(1), List.of("add_client")));
         }
 
         // Формирование списка клиентов для inline-клавиатуры
-        List<String> clientNames = clients.stream()
+        List<String> clientNames = expenseCategies.stream()
                 .map(Client::getFullName)
                 .collect(Collectors.toList());
         clientNames.add("Добавить");
 
         log.info("Список имён: {}", clientNames);
 
-        List<String> clientCallbacks = clients.stream()
+        List<String> clientCallbacks = expenseCategies.stream()
                 .map(client -> "client_" + client.getId()) // Генерируем уникальное callbackData для каждого клиента
                 .collect(Collectors.toList());
         clientCallbacks.add(ADD_CLIENT_CONFIG);
         log.info("Список кнопок"+clientCallbacks);
+        session.setAwaitingExpenseCategory(true);
+        userSessionManager.updateSession(chatId,session);
         return methodFactory.getSendMessage(
                 chatId,
                 "Выберите клиента из списка или создайте нового:",
@@ -115,6 +110,37 @@ public class ReportManager extends AbstractManager {
         );
     }
 
+    private BotApiMethod<?> outcomeMethod(CallbackQuery callbackQuery, Long chatId, UserSession session) {
+        List<ExpenseCategory> expenseCategories=null;
+        try {
+        expenseCategories=webFluxBuilder.getExpenseCategories(session.getUsername(), session.getJwt());
+        }catch (Exception e) {
+            log.error(e.getMessage());
+            return methodFactory.getSendMessage(chatId,"Ошибка при получении Категорий затрат.",null);
+        }
+        List<String> categoriesNames = expenseCategories.stream()
+                .map(ExpenseCategory::getName)
+                .collect(Collectors.toList());
+        categoriesNames.add("Добавить");
+
+        log.info("Список имён: {}", categoriesNames);
+
+        List<String> categoriesCallbacks = expenseCategories.stream()
+                .map(client -> "category_" + client.getId()) // Генерируем уникальное callbackData для каждого клиента
+                .collect(Collectors.toList());
+        categoriesCallbacks.add(ADD_EXPENSE_CATEGORY);
+
+        return methodFactory.getSendMessage(
+                chatId,
+                "Выберите категорию из списка или создайте нового:",
+                keyboardFactory.getInlineKeyboardMarkup(
+                        categoriesNames,
+                        List.of(categoriesNames.size()),
+                        categoriesCallbacks
+                )
+        );
+
+    }
     @Override
     public BotApiMethod<?> answerMessage(Message message, Bot bot) {
         Long chatId = message.getChatId();
@@ -123,7 +149,7 @@ public class ReportManager extends AbstractManager {
             Double amountMoney = Double.valueOf(message.getText());
             session.setAwaitingAmountMoney(false);
             session.setAmountMoney(amountMoney);
-            session.setAwaitingCategory(true);
+            session.setAwaitingExpenseCategory(true);
             userSessionManager.updateSession(chatId, session);
             //Здесь делает запрос post для указания прибыли:
             try {

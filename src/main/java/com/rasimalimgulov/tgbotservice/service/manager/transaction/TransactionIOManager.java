@@ -58,7 +58,8 @@ public class TransactionIOManager extends AbstractManager {
                     return answerMethodFactory.getSendMessage(chatId, "Не получилось отправить транзакцию", null);
                 }
                 log.info(transactionResult);
-
+                cleansession(session); ////// Очищаем сессию Нужно ли?
+                userSessionManager.updateSession(chatId,session);
                 return answerMethodFactory.getSendMessage(chatId, "Поздравляю, мы успешно сохранили доход.Выберите дальнейшее действие:",
                         keyboardFactory.getInlineKeyboardMarkup(List.of("Добавить еще один доход", "Главное меню"), List.of(2), List.of(INCOME, MAIN_PAGE)));
             }
@@ -90,5 +91,15 @@ public class TransactionIOManager extends AbstractManager {
     public BotApiMethod<?> answerCommand(Message message, Bot bot) {
         return null;
     }
-
+    private UserSession cleansession(UserSession session){
+        session.setNewClientName(null);
+        session.setNewClientPhone(null);
+        session.setServiceTypeName(null);
+        session.setMoneyType(null);
+        session.setTransactionStatus(null);
+        session.setAmountMoney(null);
+        session.setTransaction_client_id(null);
+        session.setComment(null);
+        return session;
+    }
 }

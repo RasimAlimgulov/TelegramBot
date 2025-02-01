@@ -1,9 +1,6 @@
 package com.rasimalimgulov.tgbotservice.service.webflux;
 
-import com.rasimalimgulov.tgbotservice.dto.Client;
-import com.rasimalimgulov.tgbotservice.dto.ServiceType;
-import com.rasimalimgulov.tgbotservice.dto.TransactionIncome;
-import com.rasimalimgulov.tgbotservice.dto.TransactionType;
+import com.rasimalimgulov.tgbotservice.dto.*;
 import com.rasimalimgulov.tgbotservice.service.manager.session.UserSession;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
@@ -37,7 +34,16 @@ public class WebFluxBuilder {
                 })
                 .block();
     }
-
+    public List<ExpenseCategory> getExpenseCategories(String username, String jwt) {
+        return WebClient.create(urlApi)
+                .get()
+                .uri(uriBuilder -> uriBuilder.path("/expensecategories").queryParam("username", username).build())
+                .header("Authorization", "Bearer " + jwt)
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<List<ExpenseCategory>>() {
+                })
+                .block();
+    }
     public List<ServiceType> getServiceTypesByUsername(String username, String jwt) {
         return WebClient.create(urlApi)
                 .get()
@@ -58,7 +64,7 @@ public class WebFluxBuilder {
                 .bodyToMono(ServiceType.class).block();
     }
 
-    public Client addNewClient(String username,String nameClient,String phoneClient,String serviceType,String jwt) {
+    public Client addNewClient(String username, String nameClient, String phoneClient, String serviceType, String jwt) {
         return WebClient.create(urlApi)
                 .post()
                 .uri("/addclient").bodyValue(new NewClientRequest(username,nameClient,phoneClient,serviceType))

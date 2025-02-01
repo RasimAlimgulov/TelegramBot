@@ -2,8 +2,6 @@ package com.rasimalimgulov.tgbotservice.dto;
 
 import lombok.*;
 
-import java.time.LocalDateTime;
-
 
 @Getter
 @Setter

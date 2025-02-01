@@ -12,7 +12,7 @@ public class UserSession {
     private String serviceTypeName;
 
 
-    private double amountMoney;
+    private Double amountMoney;
 
     private boolean awaitingLogin;
     private boolean awaitingPassword;
@@ -21,14 +21,14 @@ public class UserSession {
     private boolean awaitingPhoneNewClient;
     private boolean awaitingNewServiceType;
     private MoneyType moneyType;
-    private long transaction_client_id;
+    private Long transaction_client_id;
     private TransactionStatus transactionStatus;
     private String comment;
 
+    private String expenseCategory;
     private boolean awaitingAmountMoney;
     private boolean awaitingComment;
-    private boolean awaitingCategory;
-    private String category;
+    private boolean awaitingExpenseCategory;
     public UserSession() {
     }
 
@@ -103,18 +103,18 @@ public class UserSession {
         this.awaitingPassword = awaitingPassword;
     }
 
-    public double getAmountMoney() {
+    public Double getAmountMoney() {
         return amountMoney;
     }
 
     public void setAmountMoney(Double amountMoney) {
         this.amountMoney = amountMoney;
     }
-    public boolean getAwaitingCategory() {
-        return awaitingCategory;
+    public boolean getAwaitingExpenseCategory() {
+        return awaitingExpenseCategory;
     }
-    public void setAwaitingCategory(boolean awaitingCategory) {
-        this.awaitingCategory = awaitingCategory;
+    public void setAwaitingExpenseCategory(boolean awaitingExpenseCategory) {
+        this.awaitingExpenseCategory = awaitingExpenseCategory;
     }
 
     public boolean isAwaitingNameNewClient() {
@@ -165,20 +165,13 @@ public class UserSession {
         this.moneyType = moneyType;
     }
 
-    public long getTransaction_client_id() {
+    public Long getTransaction_client_id() {
         return transaction_client_id;
     }
 
-    public void setTransaction_client_id(long transaction_client_id) {
+    public void setTransaction_client_id(Long transaction_client_id) {
         this.transaction_client_id = transaction_client_id;
     }
 
-    public String getCategory() {
-        return category;
-    }
-
-    public void setCategory(String category) {
-        this.category = category;
-    }
 }
 

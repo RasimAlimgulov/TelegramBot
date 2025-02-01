@@ -15,6 +15,8 @@ public class CallbackData {
     public static final String MONEY_COUNT= "moneyCount";
     public static final String TRANSACTION_INCOME_REQUEST= "transactionIncomeRequest";
 
+    public static final String ADD_EXPENSE_CATEGORY= "addExpenseCategory";
+
     public static final String TODAY = "day";
     public static final String WEEK = "week";
     public static final String MONTH = "month";

@@ -7,7 +7,6 @@ import com.rasimalimgulov.tgbotservice.service.factory.KeyboardFactory;
 import com.rasimalimgulov.tgbotservice.service.manager.AbstractManager;
 import com.rasimalimgulov.tgbotservice.service.manager.session.UserSession;
 import com.rasimalimgulov.tgbotservice.service.manager.session.UserSessionManager;
-import com.rasimalimgulov.tgbotservice.service.webflux.NewClientRequest;
 import com.rasimalimgulov.tgbotservice.service.webflux.WebFluxBuilder;
 import com.rasimalimgulov.tgbotservice.telegram.Bot;
 import lombok.AccessLevel;
@@ -18,7 +17,6 @@ import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
