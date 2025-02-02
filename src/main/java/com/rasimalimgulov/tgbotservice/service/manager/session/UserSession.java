@@ -1,5 +1,6 @@
 package com.rasimalimgulov.tgbotservice.service.manager.session;
 
+import com.rasimalimgulov.tgbotservice.dto.TransactionType;
 import com.rasimalimgulov.tgbotservice.service.manager.money.MoneyType;
 import com.rasimalimgulov.tgbotservice.service.manager.transaction.TransactionStatus;
 
@@ -23,13 +24,31 @@ public class UserSession {
     private MoneyType moneyType;
     private Long transaction_client_id;
     private TransactionStatus transactionStatus;
+    private TransactionType transactionType;
     private String comment;
 
     private String expenseCategory;
     private boolean awaitingAmountMoney;
     private boolean awaitingComment;
     private boolean awaitingExpenseCategory;
+
     public UserSession() {
+    }
+
+    public String getExpenseCategory() {
+        return expenseCategory;
+    }
+
+    public TransactionType getTransactionType() {
+        return transactionType;
+    }
+
+    public void setTransactionType(TransactionType transactionType) {
+        this.transactionType = transactionType;
+    }
+
+    public void setExpenseCategory(String expenseCategory) {
+        this.expenseCategory = expenseCategory;
     }
 
     public String getComment() {
@@ -71,6 +90,7 @@ public class UserSession {
     public void setJwt(String jwt) {
         this.jwt = jwt;
     }
+
     public String getUsername() {
         return username;
     }
@@ -110,9 +130,11 @@ public class UserSession {
     public void setAmountMoney(Double amountMoney) {
         this.amountMoney = amountMoney;
     }
+
     public boolean getAwaitingExpenseCategory() {
         return awaitingExpenseCategory;
     }
+
     public void setAwaitingExpenseCategory(boolean awaitingExpenseCategory) {
         this.awaitingExpenseCategory = awaitingExpenseCategory;
     }

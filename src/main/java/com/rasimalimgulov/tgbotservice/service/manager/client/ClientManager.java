@@ -82,6 +82,7 @@ public class ClientManager extends AbstractManager {
     }
 
     private BotApiMethod<?> handleNewClientRequest(Long chatId, UserSession session) {
+        log.info("ServiceType в методе addClient в ClientManager:"+session.getServiceTypeName());
         try {
             Client client = webFluxBuilder.addNewClient(
                     session.getUsername(),
@@ -101,7 +102,7 @@ public class ClientManager extends AbstractManager {
                     keyboardFactory.getInlineKeyboardMarkup(List.of("Указать сумму прибыли"), List.of(1), List.of(MONEY_COUNT)));
         } catch (Exception e) {
             log.error("Ошибка при добавлении клиента: {}", e.getMessage());
-            return answerMethodFactory.getSendMessage(chatId, e.getMessage(), null);
+            return answerMethodFactory.getSendMessage(chatId, "Ошибка при добавлении клиента:"+e.getMessage(), null);
         }
     }
 

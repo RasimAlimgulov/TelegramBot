@@ -22,13 +22,13 @@ import static com.rasimalimgulov.tgbotservice.service.data.CallbackData.*;
 @Log4j2
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class TransactionIOManager extends AbstractManager {
+public class ExpenseTransactionManager extends AbstractManager {
     final AnswerMethodFactory answerMethodFactory;
     final KeyboardFactory keyboardFactory;
     final UserSessionManager userSessionManager;
     final WebFluxBuilder webFluxBuilder;
 
-    public TransactionIOManager(AnswerMethodFactory answerMethodFactory, KeyboardFactory keyboardFactory, UserSessionManager userSessionManager, WebFluxBuilder webFluxBuilder) {
+    public ExpenseTransactionManager(AnswerMethodFactory answerMethodFactory, KeyboardFactory keyboardFactory, UserSessionManager userSessionManager, WebFluxBuilder webFluxBuilder) {
         this.answerMethodFactory = answerMethodFactory;
         this.keyboardFactory = keyboardFactory;
         this.userSessionManager = userSessionManager;
@@ -40,28 +40,22 @@ public class TransactionIOManager extends AbstractManager {
         String callbackData = callbackQuery.getData();
         Long chatId = callbackQuery.getMessage().getChatId();
         UserSession session = userSessionManager.getSession(chatId);
-        String[] transactionStatus = callbackData.split("_");
-        if (callbackData.contains("status_")) {
-            session.setTransactionStatus(TransactionStatus.valueOf(transactionStatus.length == 2 ? transactionStatus[1] : transactionStatus[1] + "_" + transactionStatus[2]));
-            session.setAwaitingComment(true);
-            userSessionManager.updateSession(chatId, session);
-            return answerMethodFactory.getSendMessage(chatId, "Оставьте коментарий:", null);
-        }
 
         switch (callbackData) {
-            case TRANSACTION_INCOME_REQUEST -> {
+            case TRANSACTION_OUTCOME_REQUEST -> {
                 Object transactionResult = null;
                 try {
-                    transactionResult = webFluxBuilder.addNewTransactionIncome(session);
+                    log.info("Выполняется try catch");
+                    transactionResult = webFluxBuilder.addNewTransactionOutcome(session);
                 } catch (Exception e) {
-                    log.info(e.getMessage());
+                    log.info("Ошибка возникла при отправке запроса на транзакцию расхода" + e.getMessage() + e.getCause());
                     return answerMethodFactory.getSendMessage(chatId, "Не получилось отправить транзакцию", null);
                 }
                 log.info(transactionResult);
-                cleansession(session); ////// Очищаем сессию Нужно ли?
-                userSessionManager.updateSession(chatId,session);
-                return answerMethodFactory.getSendMessage(chatId, "Поздравляю, мы успешно сохранили доход.Выберите дальнейшее действие:",
-                        keyboardFactory.getInlineKeyboardMarkup(List.of("Добавить еще один доход", "Главное меню"), List.of(2), List.of(INCOME, MAIN_PAGE)));
+                UserSession cleanSession=cleanSession(session); ////// Очищаем сессию
+                userSessionManager.updateSession(chatId, cleanSession);
+                return answerMethodFactory.getSendMessage(chatId, "Поздравляю, мы успешно сохранили расход.Выберите дальнейшее действие:",
+                        keyboardFactory.getInlineKeyboardMarkup(List.of("Добавить еще один расход", "Главное меню"), List.of(2), List.of(OUTCOME, MAIN_PAGE)));
             }
         }
 
@@ -72,18 +66,6 @@ public class TransactionIOManager extends AbstractManager {
     public BotApiMethod<?> answerMessage(Message message, Bot bot) {
         Long chatId = message.getChatId();
         UserSession session = userSessionManager.getSession(chatId);
-        if (session.isAwaitingComment()) {
-            session.setComment(message.getText());
-            userSessionManager.updateSession(chatId, session);
-
-            log.info("client_id=" + session.getTransaction_client_id() + " money_count=" + session.getAmountMoney()
-                    + " тип денег=" + session.getMoneyType() + " тип услуги=" + session.getServiceTypeName()
-                    + " статус транзакции=" + session.getTransactionStatus() + " Комментарий=" + session.getComment());
-            return answerMethodFactory.getSendMessage(chatId, "Подтвердите создание дохода: " + "client_id=" + session.getTransaction_client_id() + " money_count=" + session.getAmountMoney()
-                            + " тип денег=" + session.getMoneyType() + " тип услуги=" + session.getServiceTypeName()
-                            + " статус транзакции=" + session.getTransactionStatus() + " Комментарий=" + session.getComment(),
-                    keyboardFactory.getInlineKeyboardMarkup(List.of("Подтвердить"), List.of(1), List.of(TRANSACTION_INCOME_REQUEST)));
-        }
         return null;
     }
 
@@ -91,7 +73,9 @@ public class TransactionIOManager extends AbstractManager {
     public BotApiMethod<?> answerCommand(Message message, Bot bot) {
         return null;
     }
-    private UserSession cleansession(UserSession session){
+
+    private UserSession cleanSession(UserSession session) {
+        session.setExpenseCategory(null);
         session.setNewClientName(null);
         session.setNewClientPhone(null);
         session.setServiceTypeName(null);
@@ -100,6 +84,7 @@ public class TransactionIOManager extends AbstractManager {
         session.setAmountMoney(null);
         session.setTransaction_client_id(null);
         session.setComment(null);
+        session.setTransactionType(null);
         return session;
     }
 }

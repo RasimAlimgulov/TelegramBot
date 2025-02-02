@@ -2,6 +2,7 @@ package com.rasimalimgulov.tgbotservice.service.manager.report;
 
 import com.rasimalimgulov.tgbotservice.dto.Client;
 import com.rasimalimgulov.tgbotservice.dto.ExpenseCategory;
+import com.rasimalimgulov.tgbotservice.dto.TransactionType;
 import com.rasimalimgulov.tgbotservice.service.factory.AnswerMethodFactory;
 import com.rasimalimgulov.tgbotservice.service.factory.KeyboardFactory;
 import com.rasimalimgulov.tgbotservice.service.manager.AbstractManager;
@@ -46,9 +47,11 @@ public class ReportManager extends AbstractManager {
 
         switch (callbackData) {
             case INCOME:
+                session.setTransactionType(TransactionType.INCOME);
                 return incomeMethod(callbackQuery, chatId, session);
 
             case OUTCOME:
+                session.setTransactionType(TransactionType.EXPENSE);
               return outcomeMethod(callbackQuery, chatId, session);
 
             case REPORT:
@@ -97,8 +100,6 @@ public class ReportManager extends AbstractManager {
                 .collect(Collectors.toList());
         clientCallbacks.add(ADD_CLIENT_CONFIG);
         log.info("Список кнопок"+clientCallbacks);
-        session.setAwaitingExpenseCategory(true);
-        userSessionManager.updateSession(chatId,session);
         return methodFactory.getSendMessage(
                 chatId,
                 "Выберите клиента из списка или создайте нового:",
@@ -126,7 +127,7 @@ public class ReportManager extends AbstractManager {
         log.info("Список имён: {}", categoriesNames);
 
         List<String> categoriesCallbacks = expenseCategories.stream()
-                .map(client -> "category_" + client.getId()) // Генерируем уникальное callbackData для каждого клиента
+                .map(category -> "category_" + category.getName()) // Генерируем уникальное callbackData для каждого клиента
                 .collect(Collectors.toList());
         categoriesCallbacks.add(ADD_EXPENSE_CATEGORY);
 

@@ -44,7 +44,7 @@ public class ServiceTypeManager extends AbstractManager {
         Long chatId = callbackQuery.getMessage().getChatId();
         UserSession session = userSessionManager.getSession(chatId);
         if (callbackData.contains("serviceType_")){
-            session.setServiceTypeName(callbackData.split("_")[1]);
+            session.setServiceTypeName(callbackData.split("_")[2]);
             userSessionManager.updateSession(chatId,session);
             return answerMethodFactory.getSendMessage(chatId,"Тип данных добавлен успешно. Имя клиента: " +
                             ""+session.getNewClientName()+" Номер телефона: "+session.getNewClientPhone()+" Тип услуги: "+session.getServiceTypeName()

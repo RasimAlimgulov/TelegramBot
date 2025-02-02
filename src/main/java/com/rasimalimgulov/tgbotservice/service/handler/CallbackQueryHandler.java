@@ -2,12 +2,15 @@ package com.rasimalimgulov.tgbotservice.service.handler;
 
 import com.rasimalimgulov.tgbotservice.service.manager.authentication.AuthenticationManager;
 import com.rasimalimgulov.tgbotservice.service.manager.client.ClientManager;
+import com.rasimalimgulov.tgbotservice.service.manager.comment.CommentManager;
+import com.rasimalimgulov.tgbotservice.service.manager.expencecategory.ExpenseCategoryManager;
 import com.rasimalimgulov.tgbotservice.service.manager.money.MoneyManager;
 import com.rasimalimgulov.tgbotservice.service.manager.report.ReportManager;
 import com.rasimalimgulov.tgbotservice.service.manager.servicetype.ServiceTypeManager;
 import com.rasimalimgulov.tgbotservice.service.manager.settings.SettingsManager;
 import com.rasimalimgulov.tgbotservice.service.manager.start.StartManager;
-import com.rasimalimgulov.tgbotservice.service.manager.transaction.TransactionIOManager;
+import com.rasimalimgulov.tgbotservice.service.manager.transaction.ExpenseTransactionManager;
+import com.rasimalimgulov.tgbotservice.service.manager.transaction.IncomeTransactionManager;
 import com.rasimalimgulov.tgbotservice.telegram.Bot;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -27,37 +30,46 @@ public class CallbackQueryHandler {
     final ClientManager clientManager;
     final ServiceTypeManager serviceTypeManager;
     final MoneyManager moneyManager;
-    final TransactionIOManager transactionIOManager;
+    final IncomeTransactionManager incomeTransactionManager;
     final StartManager startManager;
-    public CallbackQueryHandler(SettingsManager settingsManager, ReportManager reportManager, AuthenticationManager authenticationManager, ClientManager clientManager, ServiceTypeManager serviceTypeManager, MoneyManager moneyManager, TransactionIOManager transactionIOManager, StartManager startManager) {
+    final ExpenseCategoryManager expenseCategoryManager;
+    final CommentManager commentManager;
+    final ExpenseTransactionManager expenseTransactionManager;
+    public CallbackQueryHandler(SettingsManager settingsManager, ReportManager reportManager, AuthenticationManager authenticationManager, ClientManager clientManager, ServiceTypeManager serviceTypeManager, MoneyManager moneyManager, IncomeTransactionManager incomeTransactionManager, StartManager startManager, ExpenseCategoryManager expenseCategoryManager, CommentManager commentManager, ExpenseTransactionManager expenseTransactionManager) {
         this.settingsManager = settingsManager;
         this.reportManager = reportManager;
         this.authenticationManager = authenticationManager;
         this.clientManager = clientManager;
         this.serviceTypeManager = serviceTypeManager;
         this.moneyManager = moneyManager;
-        this.transactionIOManager = transactionIOManager;
+        this.incomeTransactionManager = incomeTransactionManager;
         this.startManager = startManager;
+        this.expenseCategoryManager = expenseCategoryManager;
+        this.commentManager = commentManager;
+        this.expenseTransactionManager = expenseTransactionManager;
     }
 
     public BotApiMethod<?> answer(CallbackQuery callbackQuery, Bot bot) {
         String callbackData = callbackQuery.getData();
         System.out.println("Выполняется метод answer класса CallBackQueryHandler");
-        if (callbackData.contains("client_")){
-            return clientManager.answerCallbackQuery(callbackQuery,bot);
+        if (callbackData.contains("client_")) {
+            return clientManager.answerCallbackQuery(callbackQuery, bot);
         }
-        if (callbackData.contains("serviceType_")){
-            return serviceTypeManager.answerCallbackQuery(callbackQuery,bot);
+        if (callbackData.contains("serviceType_")) {
+            return serviceTypeManager.answerCallbackQuery(callbackQuery, bot);
         }
         if (callbackData.contains("status_")) {
-            return transactionIOManager.answerCallbackQuery(callbackQuery,bot);
+            return incomeTransactionManager.answerCallbackQuery(callbackQuery, bot);
         }
         if (callbackData.contains("money_type")) {
-         return moneyManager.answerCallbackQuery(callbackQuery,bot);
+            return moneyManager.answerCallbackQuery(callbackQuery, bot);
+        }
+        if (callbackData.contains("category_")) {
+            return expenseCategoryManager.answerCallbackQuery(callbackQuery, bot);
         }
         switch (callbackData) {
             case MAIN_PAGE -> {
-                return startManager.answerCallbackQuery(callbackQuery,bot);
+                return startManager.answerCallbackQuery(callbackQuery, bot);
             }
             case LOGIN -> {
                 return authenticationManager.answerCallbackQuery(callbackQuery, bot);
@@ -65,17 +77,26 @@ public class CallbackQueryHandler {
             case REPORT, INCOME, OUTCOME -> {
                 return reportManager.answerCallbackQuery(callbackQuery, bot);
             }
-            case ADD_CLIENT_CONFIG, ADD_CLIENT_REQUEST-> {
+            case ADD_EXPENSE_CATEGORY -> {
+                return expenseCategoryManager.answerCallbackQuery(callbackQuery, bot);
+            }
+            case ADD_CLIENT_CONFIG, ADD_CLIENT_REQUEST -> {
                 return clientManager.answerCallbackQuery(callbackQuery, bot);
             }
             case ADD_TYPE_SERVICE -> {
                 return serviceTypeManager.answerCallbackQuery(callbackQuery, bot);
             }
             case MONEY_COUNT -> {
-                return moneyManager.answerCallbackQuery(callbackQuery,bot);
+                return moneyManager.answerCallbackQuery(callbackQuery, bot);
+            }
+            case ADD_COMMENT -> {
+                return commentManager.answerCallbackQuery(callbackQuery,bot);
             }
             case TRANSACTION_INCOME_REQUEST -> {
-                return transactionIOManager.answerCallbackQuery(callbackQuery, bot);
+                return incomeTransactionManager.answerCallbackQuery(callbackQuery, bot);
+            }
+            case TRANSACTION_OUTCOME_REQUEST -> {
+                return expenseTransactionManager.answerCallbackQuery(callbackQuery, bot);
             }
         }
         return null;

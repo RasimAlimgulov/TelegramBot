@@ -2,12 +2,13 @@ package com.rasimalimgulov.tgbotservice.service.webflux;
 
 import com.rasimalimgulov.tgbotservice.dto.*;
 import com.rasimalimgulov.tgbotservice.service.manager.session.UserSession;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
-
+@Log4j2
 @Component
 public class WebFluxBuilder {
     private static final String urlApi = "http://localhost:8081/";
@@ -65,6 +66,7 @@ public class WebFluxBuilder {
     }
 
     public Client addNewClient(String username, String nameClient, String phoneClient, String serviceType, String jwt) {
+        log.info("Выполняется метод по запросу по добавлению клиента. ServiceType="+serviceType);
         return WebClient.create(urlApi)
                 .post()
                 .uri("/addclient").bodyValue(new NewClientRequest(username,nameClient,phoneClient,serviceType))
@@ -73,6 +75,7 @@ public class WebFluxBuilder {
                 .bodyToMono(Client.class).block();
     }
     public TransactionIncome addNewTransactionIncome(UserSession session) {
+
         return WebClient.create(urlApi)
                 .post()
                 .uri("/addincome").bodyValue(new TransactionIncome(
@@ -83,5 +86,27 @@ public class WebFluxBuilder {
                 .header("Authorization", "Bearer " + session.getJwt())
                 .retrieve()
                 .bodyToMono(TransactionIncome.class).block();
+    }
+    public TransactionOutcome addNewTransactionOutcome(UserSession session) {
+        return WebClient.create(urlApi)
+                .post()
+                .uri("/addoutcome").bodyValue(new TransactionOutcome(
+                        TransactionType.EXPENSE
+                        ,session.getAmountMoney()
+                        ,session.getExpenseCategory()
+                        ,session.getComment(),session.getMoneyType(),session.getUsername()))
+                .header("Authorization", "Bearer " + session.getJwt())
+                .retrieve()
+                .bodyToMono(TransactionOutcome.class).block();
+    }
+
+
+    public ExpenseCategory addNewExpenseCategory(String nameExpenseCategory,String username, String jwt) {
+        return WebClient.create(urlApi)
+                .post()
+                .uri("/addexpensecategory").bodyValue(new ExpCatRequest(nameExpenseCategory,username))
+                .header("Authorization", "Bearer " + jwt)
+                .retrieve()
+                .bodyToMono(ExpenseCategory.class).block();
     }
 }
