@@ -4,6 +4,8 @@ import com.rasimalimgulov.tgbotservice.dto.TransactionType;
 import com.rasimalimgulov.tgbotservice.service.manager.money.MoneyType;
 import com.rasimalimgulov.tgbotservice.service.manager.transaction.TransactionStatus;
 
+import java.time.LocalDateTime;
+
 public class UserSession {
     private String username;
     private String jwt;
@@ -25,6 +27,12 @@ public class UserSession {
     private Long transaction_client_id;
     private TransactionStatus transactionStatus;
     private TransactionType transactionType;
+    private String reportType;
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
+    private boolean awaitingCustomPeriod;
+
+
     private String comment;
 
     private String expenseCategory;
@@ -32,7 +40,33 @@ public class UserSession {
     private boolean awaitingComment;
     private boolean awaitingExpenseCategory;
 
-    public UserSession() {
+    public String getReportType() {
+        return reportType;
+    }
+
+    public void setReportType(String reportType) {
+        this.reportType = reportType;
+    }
+
+    public void setTransactionDateRange(LocalDateTime start, LocalDateTime end) {
+        this.startDate = start;
+        this.endDate = end;
+    }
+
+    public LocalDateTime getStartDate() {
+        return startDate;
+    }
+
+    public LocalDateTime getEndDate() {
+        return endDate;
+    }
+
+    public boolean isAwaitingCustomPeriod() {
+        return awaitingCustomPeriod;
+    }
+
+    public void setAwaitingCustomPeriod(boolean awaitingCustomPeriod) {
+        this.awaitingCustomPeriod = awaitingCustomPeriod;
     }
 
     public String getExpenseCategory() {

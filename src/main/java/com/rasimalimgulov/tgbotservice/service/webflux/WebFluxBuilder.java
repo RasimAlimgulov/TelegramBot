@@ -109,4 +109,47 @@ public class WebFluxBuilder {
                 .retrieve()
                 .bodyToMono(ExpenseCategory.class).block();
     }
+
+    //////////////////////////////////////////////////////////////////////////   ОТЧЕТЫ
+
+    public byte[] downloadIncomeReportByClients(String username, String jwt) {
+        return WebClient.create(urlApi)
+                .get()
+                .uri("/report/income-by-clients?username=" + username)
+                .header("Authorization", "Bearer " + jwt)
+                .retrieve()
+                .bodyToMono(byte[].class)
+                .block();
+    }
+
+    public byte[] downloadIncomeReportByCategories(String username, String jwt) {
+        return WebClient.create(urlApi)
+                .get()
+                .uri("/report/income-by-categories?username=" + username)
+                .header("Authorization", "Bearer " + jwt)
+                .retrieve()
+                .bodyToMono(byte[].class)
+                .block();
+    }
+
+    public byte[] downloadExpenseReportByCategories(String username, String jwt) {
+        return WebClient.create(urlApi)
+                .get()
+                .uri("/report/expenses-by-categories?username=" + username)
+                .header("Authorization", "Bearer " + jwt)
+                .retrieve()
+                .bodyToMono(byte[].class)
+                .block();
+    }
+
+    public byte[] downloadTotalReport(String username, String jwt) {
+        return WebClient.create(urlApi)
+                .get()
+                .uri("/report/total?username=" + username)
+                .header("Authorization", "Bearer " + jwt)
+                .retrieve()
+                .bodyToMono(byte[].class)
+                .block();
+    }
+
 }

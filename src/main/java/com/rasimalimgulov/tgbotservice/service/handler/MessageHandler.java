@@ -5,6 +5,7 @@ import com.rasimalimgulov.tgbotservice.service.manager.client.ClientManager;
 import com.rasimalimgulov.tgbotservice.service.manager.comment.CommentManager;
 import com.rasimalimgulov.tgbotservice.service.manager.expencecategory.ExpenseCategoryManager;
 import com.rasimalimgulov.tgbotservice.service.manager.money.MoneyManager;
+import com.rasimalimgulov.tgbotservice.service.manager.period.PeriodManager;
 import com.rasimalimgulov.tgbotservice.service.manager.report.ReportManager;
 import com.rasimalimgulov.tgbotservice.service.manager.servicetype.ServiceTypeManager;
 import com.rasimalimgulov.tgbotservice.service.manager.session.UserSession;
@@ -26,7 +27,8 @@ public class MessageHandler {
     final IncomeTransactionManager incomeTransactionManager;
     final ExpenseCategoryManager expenseCategoryManager;
     final CommentManager commentManager;
-    public MessageHandler(AuthenticationManager authenticationManager, ReportManager reportManager, UserSessionManager sessionManager, ClientManager clientManager, ServiceTypeManager serviceTypeManager, MoneyManager moneyManager, IncomeTransactionManager incomeTransactionManager, ExpenseCategoryManager expenseCategoryManager, CommentManager commentManager) {
+    final PeriodManager periodManager;
+    public MessageHandler(AuthenticationManager authenticationManager, ReportManager reportManager, UserSessionManager sessionManager, ClientManager clientManager, ServiceTypeManager serviceTypeManager, MoneyManager moneyManager, IncomeTransactionManager incomeTransactionManager, ExpenseCategoryManager expenseCategoryManager, CommentManager commentManager, PeriodManager periodManager) {
         this.authenticationManager = authenticationManager;
         this.reportManager = reportManager;
         this.sessionManager = sessionManager;
@@ -36,6 +38,7 @@ public class MessageHandler {
         this.incomeTransactionManager = incomeTransactionManager;
         this.expenseCategoryManager = expenseCategoryManager;
         this.commentManager = commentManager;
+        this.periodManager = periodManager;
     }
 
     public BotApiMethod<?> answer(Message message, Bot bot) {
@@ -57,6 +60,9 @@ public class MessageHandler {
         }
         if (session.getAwaitingExpenseCategory()){
             return expenseCategoryManager.answerMessage(message, bot);
+        }
+        if (session.isAwaitingCustomPeriod()){
+            return periodManager.answerMessage(message, bot);
         }
         return null;
     }

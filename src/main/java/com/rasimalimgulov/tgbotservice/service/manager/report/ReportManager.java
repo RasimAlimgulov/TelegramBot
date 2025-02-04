@@ -57,11 +57,11 @@ public class ReportManager extends AbstractManager {
             case REPORT:
                 return methodFactory.getEditMessageText(
                         callbackQuery,
-                        "За какой период вы хотите получить отчет?",
+                        "Выберите тип отчета:",
                         keyboardFactory.getInlineKeyboardMarkup(
-                                List.of("Сегодня", "За неделю", "За месяц", "Указать гггг-мм-дд", "Назад"),
-                                List.of(3, 2),
-                                List.of(TODAY, WEEK, MONTH, USER_DATE, LOGIN)
+                                List.of("Отчет по прибыли","Отчет по расходам","Все транзакции"),
+                                List.of(3),
+                                List.of(INCOME_REPORT,EXPENSE_REPORT,ALL_REPORT)
                         )
                 );
 
