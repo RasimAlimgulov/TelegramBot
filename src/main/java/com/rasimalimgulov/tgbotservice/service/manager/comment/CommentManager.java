@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.List;
 
@@ -37,7 +38,8 @@ public class CommentManager extends AbstractManager {
     }
 
     @Override
-    public BotApiMethod<?> answerCallbackQuery(CallbackQuery callbackQuery, Bot bot) {
+    public BotApiMethod<?> answerCallbackQuery(CallbackQuery callbackQuery, Bot bot) throws TelegramApiException {
+        bot.execute(answerMethodFactory.getAnswerCallbackQuery(callbackQuery));
         String callbackData = callbackQuery.getData();
         Long chatId = callbackQuery.getMessage().getChatId();
         UserSession session = userSessionManager.getSession(chatId);

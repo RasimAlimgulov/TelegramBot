@@ -17,7 +17,9 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,7 +42,8 @@ public class ReportManager extends AbstractManager {
     }
 
     @Override
-    public BotApiMethod<?> answerCallbackQuery(CallbackQuery callbackQuery, Bot bot) {
+    public BotApiMethod<?> answerCallbackQuery(CallbackQuery callbackQuery, Bot bot) throws TelegramApiException {
+        bot.execute(methodFactory.getAnswerCallbackQuery(callbackQuery));
         String callbackData = callbackQuery.getData();
         Long chatId = callbackQuery.getMessage().getChatId();
         UserSession session = userSessionManager.getSession(chatId);
@@ -55,8 +58,8 @@ public class ReportManager extends AbstractManager {
               return outcomeMethod(callbackQuery, chatId, session);
 
             case REPORT:
-                return methodFactory.getEditMessageText(
-                        callbackQuery,
+                return methodFactory.getSendMessage(
+                        callbackQuery.getMessage().getChatId(),
                         "Выберите тип отчета:",
                         keyboardFactory.getInlineKeyboardMarkup(
                                 List.of("Отчет по прибыли","Отчет по расходам","Все транзакции"),
@@ -79,7 +82,8 @@ public class ReportManager extends AbstractManager {
         } catch (Exception e) {
 //            if (e.getMessage()== HttpStatus.)
             log.error("Ошибка при получении списка клиентов: {}", e.getMessage());
-            return methodFactory.getSendMessage(chatId, "Произошла ошибка при получении списка клиентов. Попробуйте позже.", null);
+            return methodFactory.getSendMessage(chatId,"Произошла ошибка при запросе на получение списка клиентов.",
+                    keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню"),List.of(1),List.of(MAIN_PAGE)));
         }
 
         if (expenseCategies.isEmpty()) {
@@ -100,12 +104,16 @@ public class ReportManager extends AbstractManager {
                 .collect(Collectors.toList());
         clientCallbacks.add(ADD_CLIENT_CONFIG);
         log.info("Список кнопок"+clientCallbacks);
+        List<Integer> rows=new ArrayList<>();
+        for (int i = 0; i < clientNames.size(); i++) {
+            rows.add(1);
+        }
         return methodFactory.getSendMessage(
                 chatId,
                 "Выберите клиента из списка или создайте нового:",
                 keyboardFactory.getInlineKeyboardMarkup(
                         clientNames,
-                        List.of(clientNames.size()),
+                        rows,
                         clientCallbacks
                 )
         );
@@ -117,7 +125,8 @@ public class ReportManager extends AbstractManager {
         expenseCategories=webFluxBuilder.getExpenseCategories(session.getUsername(), session.getJwt());
         }catch (Exception e) {
             log.error(e.getMessage());
-            return methodFactory.getSendMessage(chatId,"Ошибка при получении Категорий затрат.",null);
+            return methodFactory.getSendMessage(chatId,"Произошла ошибка при запросе на получении списка Категорий затрат.",
+                    keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню"),List.of(1),List.of(MAIN_PAGE)));
         }
         List<String> categoriesNames = expenseCategories.stream()
                 .map(ExpenseCategory::getName)
@@ -130,13 +139,16 @@ public class ReportManager extends AbstractManager {
                 .map(category -> "category_" + category.getName()) // Генерируем уникальное callbackData для каждого клиента
                 .collect(Collectors.toList());
         categoriesCallbacks.add(ADD_EXPENSE_CATEGORY);
-
+        List<Integer> rows=new ArrayList<>();
+        for (int i = 0; i < categoriesCallbacks.size(); i++) {
+            rows.add(1);
+        }
         return methodFactory.getSendMessage(
                 chatId,
                 "Выберите категорию из списка или создайте нового:",
                 keyboardFactory.getInlineKeyboardMarkup(
                         categoriesNames,
-                        List.of(categoriesNames.size()),
+                        rows,
                         categoriesCallbacks
                 )
         );
@@ -157,7 +169,8 @@ public class ReportManager extends AbstractManager {
                 if (webFluxBuilder.incomeRequest(chatId, session.getJwt(), amountMoney)) {
                     return methodFactory.getSendMessage(chatId, "Успешно добавили прибыль.", null);
                 } else {
-                    return methodFactory.getSendMessage(chatId, "Произошла ошибка, попробуйте ещё раз", null);
+                    return methodFactory.getSendMessage(chatId, "Не получилось добавить прибыль."
+                            ,keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню"),List.of(1),List.of(MAIN_PAGE)));
                 }
             } catch (Exception e) {
                 log.info("Произошла ошибка при отправке: " + e.getMessage());

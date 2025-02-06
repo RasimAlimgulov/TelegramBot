@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +40,8 @@ public class ServiceTypeManager extends AbstractManager {
     }
 
     @Override
-    public BotApiMethod<?> answerCallbackQuery(CallbackQuery callbackQuery, Bot bot) {
+    public BotApiMethod<?> answerCallbackQuery(CallbackQuery callbackQuery, Bot bot) throws TelegramApiException {
+        bot.execute(answerMethodFactory.getAnswerCallbackQuery(callbackQuery));
         String callbackData = callbackQuery.getData();
         Long chatId = callbackQuery.getMessage().getChatId();
         UserSession session = userSessionManager.getSession(chatId);
@@ -71,17 +73,19 @@ public class ServiceTypeManager extends AbstractManager {
                 serviceType=webFluxBuilder.addNewServiceType(session.getUsername(),newServiceType,session.getJwt());
             }catch (Exception e){
                 log.error(e);
-                return answerMethodFactory.getSendMessage(chatId,"Ошибка при сохранении нового типа услуги",null);
+                return answerMethodFactory.getSendMessage(chatId,"Произошла ошибка при добавлении типа услуг.",
+                        keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню"),List.of(1),List.of(MAIN_PAGE)));
             }
             session.setAwaitingNewServiceType(false);
             session.setServiceTypeName(newServiceType);
+            session.setAwaitingListServiceType(true);
             userSessionManager.updateSession(chatId,session);
             log.info(serviceType);
 
-        return answerMethodFactory.getSendMessage(chatId,"Тип данных добавлен успешно. Имя клиента: " +
-                        ""+session.getNewClientName()+" Номер телефона: "+session.getNewClientPhone()+" Тип услуги: "+session.getServiceTypeName()
-                ,keyboardFactory.getInlineKeyboardMarkup(List.of("Подтвердить"),List.of(1),List.of(ADD_CLIENT_REQUEST)));
-    }
+        return answerMethodFactory.getSendMessage(chatId,"Тип услуг добавлен успешно"
+                    ,keyboardFactory.getInlineKeyboardMarkup(List.of("Выбрать тип услуг"),List.of(1),List.of(ADD_CLIENT_CONFIG)));
+
+        }
         return null;
     }
 

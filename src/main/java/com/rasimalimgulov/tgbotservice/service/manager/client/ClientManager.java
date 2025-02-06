@@ -16,7 +16,9 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,7 +41,8 @@ public class ClientManager extends AbstractManager {
     }
 
     @Override
-    public BotApiMethod<?> answerCallbackQuery(CallbackQuery callbackQuery, Bot bot) {
+    public BotApiMethod<?> answerCallbackQuery(CallbackQuery callbackQuery, Bot bot) throws TelegramApiException {
+        bot.execute(answerMethodFactory.getAnswerCallbackQuery(callbackQuery));
         Long chatId = callbackQuery.getMessage().getChatId();
         UserSession session = userSessionManager.getSession(chatId);
         String callbackData = callbackQuery.getData();
@@ -76,6 +79,10 @@ public class ClientManager extends AbstractManager {
     }
 
     private BotApiMethod<?> handleNewClientConfig(Long chatId, UserSession session) {
+        if (session.isAwaitingListServiceType()) {
+            session.setAwaitingListServiceType(false);
+            return generateServiceTypeSelection(chatId,session);
+        }
         session.setAwaitingNameNewClient(true);
         userSessionManager.updateSession(chatId, session);
         return answerMethodFactory.getSendMessage(chatId, "Введите Ф.И.О клиента", null);
@@ -102,7 +109,8 @@ public class ClientManager extends AbstractManager {
                     keyboardFactory.getInlineKeyboardMarkup(List.of("Указать сумму прибыли"), List.of(1), List.of(MONEY_COUNT)));
         } catch (Exception e) {
             log.error("Ошибка при добавлении клиента: {}", e.getMessage());
-            return answerMethodFactory.getSendMessage(chatId, "Ошибка при добавлении клиента:"+e.getMessage(), null);
+            return answerMethodFactory.getSendMessage(chatId,"Произошла ошибка при добавлении клиента.",
+                    keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню"),List.of(1),List.of(MAIN_PAGE)));
         }
     }
 
@@ -127,7 +135,8 @@ public class ClientManager extends AbstractManager {
             serviceTypes = webFluxBuilder.getServiceTypesByUsername(session.getUsername(), session.getJwt());
         } catch (Exception e) {
             log.error("Ошибка при получении типов услуг: {}", e.getMessage());
-            return answerMethodFactory.getSendMessage(chatId, "Ошибка при получении типов услуг", null);
+            return answerMethodFactory.getSendMessage(chatId,"Произошла ошибка при получении типов услуг.",
+                    keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню"),List.of(1),List.of(MAIN_PAGE)));
         }
         if (serviceTypes.isEmpty()) {
             return answerMethodFactory.getSendMessage(chatId, "У вас нет типов услуг. Добавьте новый тип услуги.",
@@ -139,8 +148,12 @@ public class ClientManager extends AbstractManager {
                 .collect(Collectors.toList());
         typeNames.add("Добавить");
         typeCallbacks.add(ADD_TYPE_SERVICE);
+        List<Integer> rows=new ArrayList<>();
+        for (int i = 0; i < typeNames.size(); i++) {
+            rows.add(1);
+        }
         return answerMethodFactory.getSendMessage(chatId, "Выберите тип услуги из списка или создайте новый:",
-                keyboardFactory.getInlineKeyboardMarkup(typeNames, List.of(typeNames.size()), typeCallbacks));
+                keyboardFactory.getInlineKeyboardMarkup(typeNames, rows, typeCallbacks));
     }
     @Override
     public BotApiMethod<?> answerCommand(Message message, Bot bot) {

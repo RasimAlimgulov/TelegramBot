@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 @Log4j2
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -26,7 +27,7 @@ public class UpdateDispatcher {
         this.messageHandler = messageHandler;
     }
 
-    public BotApiMethod<?> distribute(Update update, Bot bot){
+    public BotApiMethod<?> distribute(Update update, Bot bot) throws TelegramApiException {
         System.out.println("Выполняется метод разделения на команды,колбеки,сообщения в классе UpdateDispatcher");
         if (update.hasCallbackQuery()){
             return callbackQueryHandler.answer(update.getCallbackQuery(), bot);

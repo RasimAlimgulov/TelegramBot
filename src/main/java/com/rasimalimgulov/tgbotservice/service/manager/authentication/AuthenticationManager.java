@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.List;
 
@@ -36,7 +37,8 @@ public class AuthenticationManager extends AbstractManager {
     }
 
     @Override
-    public BotApiMethod<?> answerCallbackQuery(CallbackQuery callbackQuery, Bot bot) {
+    public BotApiMethod<?> answerCallbackQuery(CallbackQuery callbackQuery, Bot bot) throws TelegramApiException {
+        bot.execute(methodFactory.getAnswerCallbackQuery(callbackQuery));
         String callbackData = callbackQuery.getData();
         Long chatId = callbackQuery.getMessage().getChatId();
         switch (callbackData) {
@@ -48,15 +50,14 @@ public class AuthenticationManager extends AbstractManager {
     }
 
     @Override
-    public BotApiMethod<?> answerMessage(Message message, Bot bot) { // реакция на пришедшее сообщение.
+    public BotApiMethod<?> answerMessage(Message message, Bot bot) throws TelegramApiException { // реакция на пришедшее сообщение.
         Long chatId = message.getChatId();
         UserSession session = userSessionManager.getSession(chatId);
-
         // Получаем сессию из менеджера сессий, если нет то вернёт новую сессию
         if (session.isAwaitingLogin()) {  // Проверяем, ожидается ли ввод логина
             session.setUsername(message.getText());
             session.setAwaitingLogin(false);
-            session.setAwaitingPassword(true); //Ожидаем ввод пароля
+            session.setAwaitingPassword(true);//Ожидаем ввод пароля
             userSessionManager.updateSession(chatId, session);
             return methodFactory.getSendMessage(chatId, "Введите пароль:", null);
         } else if (session.isAwaitingPassword()) { // Если ожидается ввод пароля получаем логин из сессии и пароль из пришедшего сообщения
@@ -67,7 +68,10 @@ public class AuthenticationManager extends AbstractManager {
                 jwt = webClient.authenticateRequest(login, password);  // Отправляем запрос на API для аутентификации и получаем jwt при успешном аутен...
                 log.info("Получен jwt токен: " + jwt);
             } catch (Exception e) {
+                session.setAwaitingPassword(false);
                 log.info("Ошибка при отправке запроса: " + e.getMessage());
+                return methodFactory.getSendMessage(chatId, "Ошибка при аутентификации на стороне сервера.",
+                        keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню"),List.of(1),List.of(MAIN_PAGE)));
             }
             if (jwt != null) {
                 session.setJwt(jwt);
@@ -77,6 +81,8 @@ public class AuthenticationManager extends AbstractManager {
                         keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню")
                                 , List.of(1), List.of(MAIN_PAGE)));
             } else {
+                session.setAwaitingPassword(false);
+                userSessionManager.updateSession(chatId,session);
                 return methodFactory.getSendMessage(chatId, "Не верный логин или пароль!", null);
             }
 

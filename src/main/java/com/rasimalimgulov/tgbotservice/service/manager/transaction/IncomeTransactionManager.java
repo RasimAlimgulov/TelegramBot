@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.List;
 
@@ -36,7 +37,8 @@ public class IncomeTransactionManager extends AbstractManager {
     }
 
     @Override
-    public BotApiMethod<?> answerCallbackQuery(CallbackQuery callbackQuery, Bot bot) {
+    public BotApiMethod<?> answerCallbackQuery(CallbackQuery callbackQuery, Bot bot) throws TelegramApiException {
+        bot.execute(answerMethodFactory.getAnswerCallbackQuery(callbackQuery));
         String callbackData = callbackQuery.getData();
         Long chatId = callbackQuery.getMessage().getChatId();
         UserSession session = userSessionManager.getSession(chatId);
@@ -56,7 +58,8 @@ public class IncomeTransactionManager extends AbstractManager {
                     transactionResult = webFluxBuilder.addNewTransactionIncome(session);
                 } catch (Exception e) {
                     log.info(e.getMessage());
-                    return answerMethodFactory.getSendMessage(chatId, "Не получилось отправить транзакцию", null);
+                    return answerMethodFactory.getSendMessage(chatId,"Произошла ошибка при отправке запроса на транзакцию прибыли.",
+                            keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню"),List.of(1),List.of(MAIN_PAGE)));
                 }
                 log.info(transactionResult);
                 UserSession cleanSession = cleansession(session); ////// Очищаем сессию

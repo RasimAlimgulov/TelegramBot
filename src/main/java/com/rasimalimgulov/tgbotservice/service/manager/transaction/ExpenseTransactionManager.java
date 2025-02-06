@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.List;
 
@@ -36,7 +37,8 @@ public class ExpenseTransactionManager extends AbstractManager {
     }
 
     @Override
-    public BotApiMethod<?> answerCallbackQuery(CallbackQuery callbackQuery, Bot bot) {
+    public BotApiMethod<?> answerCallbackQuery(CallbackQuery callbackQuery, Bot bot) throws TelegramApiException {
+        bot.execute(answerMethodFactory.getAnswerCallbackQuery(callbackQuery));
         String callbackData = callbackQuery.getData();
         Long chatId = callbackQuery.getMessage().getChatId();
         UserSession session = userSessionManager.getSession(chatId);
@@ -49,11 +51,12 @@ public class ExpenseTransactionManager extends AbstractManager {
                     transactionResult = webFluxBuilder.addNewTransactionOutcome(session);
                 } catch (Exception e) {
                     log.info("Ошибка возникла при отправке запроса на транзакцию расхода" + e.getMessage() + e.getCause());
-                    return answerMethodFactory.getSendMessage(chatId, "Не получилось отправить транзакцию", null);
+                    return answerMethodFactory.getSendMessage(chatId,"Произошла ошибка при отправке запроса на транзакцию расхода",
+                            keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню"),List.of(1),List.of(MAIN_PAGE)));
                 }
                 log.info(transactionResult);
-                UserSession cleanSession=cleanSession(session); ////// Очищаем сессию
-                userSessionManager.updateSession(chatId, cleanSession);
+                session.cleanSessionMainPage(); ////// Очищаем сессию
+                userSessionManager.updateSession(chatId, session);
                 return answerMethodFactory.getSendMessage(chatId, "Поздравляю, мы успешно сохранили расход.Выберите дальнейшее действие:",
                         keyboardFactory.getInlineKeyboardMarkup(List.of("Добавить еще один расход", "Главное меню"), List.of(2), List.of(OUTCOME, MAIN_PAGE)));
             }
@@ -74,17 +77,5 @@ public class ExpenseTransactionManager extends AbstractManager {
         return null;
     }
 
-    private UserSession cleanSession(UserSession session) {
-        session.setExpenseCategory(null);
-        session.setNewClientName(null);
-        session.setNewClientPhone(null);
-        session.setServiceTypeName(null);
-        session.setMoneyType(null);
-        session.setTransactionStatus(null);
-        session.setAmountMoney(null);
-        session.setTransaction_client_id(null);
-        session.setComment(null);
-        session.setTransactionType(null);
-        return session;
-    }
+
 }

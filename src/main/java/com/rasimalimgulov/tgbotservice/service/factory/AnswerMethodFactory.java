@@ -1,6 +1,7 @@
 package com.rasimalimgulov.tgbotservice.service.factory;
 
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
@@ -31,6 +32,11 @@ public class AnswerMethodFactory {
         return DeleteMessage.builder()
                 .chatId(chatId)
                 .messageId(messageId)
+                .build();
+    }
+    public AnswerCallbackQuery getAnswerCallbackQuery(CallbackQuery callbackQuery) {
+        return AnswerCallbackQuery.builder()
+                .callbackQueryId(callbackQuery.getId())// Если не нужен текст, просто не передавай его
                 .build();
     }
 }

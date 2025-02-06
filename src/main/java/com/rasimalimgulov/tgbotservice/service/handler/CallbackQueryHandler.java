@@ -11,6 +11,7 @@ import com.rasimalimgulov.tgbotservice.service.manager.report.ExpenseReportManag
 import com.rasimalimgulov.tgbotservice.service.manager.report.IncomeReportManager;
 import com.rasimalimgulov.tgbotservice.service.manager.report.ReportManager;
 import com.rasimalimgulov.tgbotservice.service.manager.servicetype.ServiceTypeManager;
+import com.rasimalimgulov.tgbotservice.service.manager.session.LogOutManager;
 import com.rasimalimgulov.tgbotservice.service.manager.settings.SettingsManager;
 import com.rasimalimgulov.tgbotservice.service.manager.start.StartManager;
 import com.rasimalimgulov.tgbotservice.service.manager.transaction.ExpenseTransactionManager;
@@ -21,6 +22,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import static com.rasimalimgulov.tgbotservice.service.data.CallbackData.*;
 
@@ -43,7 +45,9 @@ public class CallbackQueryHandler {
     final ExpenseReportManager expenseReportManager;
     final AllReportManager allReportManager;
     final PeriodManager periodManager;
-    public CallbackQueryHandler(SettingsManager settingsManager, ReportManager reportManager, AuthenticationManager authenticationManager, ClientManager clientManager, ServiceTypeManager serviceTypeManager, MoneyManager moneyManager, IncomeTransactionManager incomeTransactionManager, StartManager startManager, ExpenseCategoryManager expenseCategoryManager, CommentManager commentManager, ExpenseTransactionManager expenseTransactionManager, IncomeReportManager incomeReportManager, ExpenseReportManager expenseReportManager, AllReportManager allReportManager, PeriodManager periodManager) {
+    final LogOutManager logOutManager;
+
+    public CallbackQueryHandler(SettingsManager settingsManager, ReportManager reportManager, AuthenticationManager authenticationManager, ClientManager clientManager, ServiceTypeManager serviceTypeManager, MoneyManager moneyManager, IncomeTransactionManager incomeTransactionManager, StartManager startManager, ExpenseCategoryManager expenseCategoryManager, CommentManager commentManager, ExpenseTransactionManager expenseTransactionManager, IncomeReportManager incomeReportManager, ExpenseReportManager expenseReportManager, AllReportManager allReportManager, PeriodManager periodManager, LogOutManager logOutManager) {
         this.settingsManager = settingsManager;
         this.reportManager = reportManager;
         this.authenticationManager = authenticationManager;
@@ -59,9 +63,10 @@ public class CallbackQueryHandler {
         this.expenseReportManager = expenseReportManager;
         this.allReportManager = allReportManager;
         this.periodManager = periodManager;
+        this.logOutManager = logOutManager;
     }
 
-    public BotApiMethod<?> answer(CallbackQuery callbackQuery, Bot bot) {
+    public BotApiMethod<?> answer(CallbackQuery callbackQuery, Bot bot) throws TelegramApiException {
         String callbackData = callbackQuery.getData();
         System.out.println("Выполняется метод answer класса CallBackQueryHandler");
         if (callbackData.contains("client_")) {
@@ -92,13 +97,13 @@ public class CallbackQueryHandler {
             case REPORT, INCOME, OUTCOME -> {
                 return reportManager.answerCallbackQuery(callbackQuery, bot);
             }
-            case EXPENSE_REPORT,EXPENSE_REPORT_BY_CATEGORY -> {
+            case EXPENSE_REPORT, EXPENSE_REPORT_BY_CATEGORY -> {
                 return expenseReportManager.answerCallbackQuery(callbackQuery, bot);
             }
-            case INCOME_REPORT,INCOME_REPORT_BY_CATEGORY,INCOME_REPORT_BY_CLIENT -> {
+            case INCOME_REPORT, INCOME_REPORT_BY_CATEGORY, INCOME_REPORT_BY_CLIENT -> {
                 return incomeReportManager.answerCallbackQuery(callbackQuery, bot);
             }
-            case ALL_REPORT,ALL_REPORT_TOTAL -> {
+            case ALL_REPORT, ALL_REPORT_TOTAL -> {
                 return allReportManager.answerCallbackQuery(callbackQuery, bot);
             }
             case ADD_EXPENSE_CATEGORY -> {
@@ -122,7 +127,12 @@ public class CallbackQueryHandler {
             case TRANSACTION_OUTCOME_REQUEST -> {
                 return expenseTransactionManager.answerCallbackQuery(callbackQuery, bot);
             }
-
+            case CHANGE_LOGIN, CHECK_ROLES, CHANGE_PASSWORD, SETTINGS -> {
+                return settingsManager.answerCallbackQuery(callbackQuery, bot);
+            }
+            case LOG_OUT -> {
+                return logOutManager.answerCallbackQuery(callbackQuery, bot);
+            }
         }
         return null;
     }

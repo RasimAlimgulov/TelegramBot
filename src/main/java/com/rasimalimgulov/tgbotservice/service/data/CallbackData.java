@@ -36,4 +36,10 @@ public class CallbackData {
     public static final String INCOME_REPORT_BY_CATEGORY = "income_report_by_category";
     public static final String EXPENSE_REPORT_BY_CATEGORY = "expense_report_by_category";
     public static final String ALL_REPORT_TOTAL="all_report_total";
+
+    public static final String CHANGE_LOGIN = "change_login";
+    public static final String CHANGE_PASSWORD= "change_password";
+    public static final String CHECK_ROLES = "check_roles";
+
+    public static final String LOG_OUT = "log_out";
 }

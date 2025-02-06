@@ -10,11 +10,13 @@ import com.rasimalimgulov.tgbotservice.service.manager.report.ReportManager;
 import com.rasimalimgulov.tgbotservice.service.manager.servicetype.ServiceTypeManager;
 import com.rasimalimgulov.tgbotservice.service.manager.session.UserSession;
 import com.rasimalimgulov.tgbotservice.service.manager.session.UserSessionManager;
+import com.rasimalimgulov.tgbotservice.service.manager.settings.SettingsManager;
 import com.rasimalimgulov.tgbotservice.service.manager.transaction.IncomeTransactionManager;
 import com.rasimalimgulov.tgbotservice.telegram.Bot;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 @Service
 public class MessageHandler {
@@ -28,7 +30,8 @@ public class MessageHandler {
     final ExpenseCategoryManager expenseCategoryManager;
     final CommentManager commentManager;
     final PeriodManager periodManager;
-    public MessageHandler(AuthenticationManager authenticationManager, ReportManager reportManager, UserSessionManager sessionManager, ClientManager clientManager, ServiceTypeManager serviceTypeManager, MoneyManager moneyManager, IncomeTransactionManager incomeTransactionManager, ExpenseCategoryManager expenseCategoryManager, CommentManager commentManager, PeriodManager periodManager) {
+    final SettingsManager settingsManager;
+    public MessageHandler(AuthenticationManager authenticationManager, ReportManager reportManager, UserSessionManager sessionManager, ClientManager clientManager, ServiceTypeManager serviceTypeManager, MoneyManager moneyManager, IncomeTransactionManager incomeTransactionManager, ExpenseCategoryManager expenseCategoryManager, CommentManager commentManager, PeriodManager periodManager, SettingsManager settingsManager) {
         this.authenticationManager = authenticationManager;
         this.reportManager = reportManager;
         this.sessionManager = sessionManager;
@@ -39,9 +42,10 @@ public class MessageHandler {
         this.expenseCategoryManager = expenseCategoryManager;
         this.commentManager = commentManager;
         this.periodManager = periodManager;
+        this.settingsManager = settingsManager;
     }
 
-    public BotApiMethod<?> answer(Message message, Bot bot) {
+    public BotApiMethod<?> answer(Message message, Bot bot) throws TelegramApiException {
         UserSession session = sessionManager.getSession(message.getChatId());
         if (session.isAwaitingLogin() || session.isAwaitingPassword()) {
             return authenticationManager.answerMessage(message, bot);
@@ -63,6 +67,9 @@ public class MessageHandler {
         }
         if (session.isAwaitingCustomPeriod()){
             return periodManager.answerMessage(message, bot);
+        }
+        if (session.isAwaitingNewLogin()||session.isAwaitingNewPassword()){
+            return settingsManager.answerMessage(message, bot);
         }
         return null;
     }

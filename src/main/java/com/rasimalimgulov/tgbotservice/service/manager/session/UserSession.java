@@ -23,6 +23,7 @@ public class UserSession {
     private boolean awaitingNameNewClient;
     private boolean awaitingPhoneNewClient;
     private boolean awaitingNewServiceType;
+    private boolean awaitingListServiceType;
     private MoneyType moneyType;
     private Long transaction_client_id;
     private TransactionStatus transactionStatus;
@@ -31,14 +32,66 @@ public class UserSession {
     private LocalDateTime startDate;
     private LocalDateTime endDate;
     private boolean awaitingCustomPeriod;
-
-
+    private boolean awaitingNewLogin;
+    private boolean awaitingNewPassword;
     private String comment;
 
     private String expenseCategory;
     private boolean awaitingAmountMoney;
     private boolean awaitingComment;
     private boolean awaitingExpenseCategory;
+
+    public void cleanSessionMainPage() {
+
+        this.setNewClientName(null);
+        this.setNewClientPhone(null);
+        this.setServiceTypeName(null);
+        this.setAmountMoney(null);
+        this.setAwaitingLogin(false);
+        this.setAwaitingPassword(false);
+        this.setAwaitingNameNewClient(false);
+        this.setAwaitingPhoneNewClient(false);
+        this.setAwaitingNewServiceType(false);
+        this.setAwaitingListServiceType(false);
+        this.setMoneyType(null);
+        this.setTransaction_client_id(null);
+        this.setTransactionStatus(null);
+        this.setTransactionType(null);
+        this.setReportType(null);
+        this.setAwaitingCustomPeriod(false);
+        this.setAwaitingNewLogin(false);
+        this.setAwaitingNewPassword(false);
+        this.setExpenseCategory(null);
+        this.setAwaitingAmountMoney(false);
+        this.setAwaitingComment(false);
+        this.setAwaitingExpenseCategory(false);
+        this.setTransactionStatus(null);
+
+    }
+
+    public boolean isAwaitingNewLogin() {
+        return awaitingNewLogin;
+    }
+
+    public void setAwaitingNewLogin(boolean awaitingNewLogin) {
+        this.awaitingNewLogin = awaitingNewLogin;
+    }
+
+    public boolean isAwaitingNewPassword() {
+        return awaitingNewPassword;
+    }
+
+    public void setAwaitingNewPassword(boolean awaitingNewPassword) {
+        this.awaitingNewPassword = awaitingNewPassword;
+    }
+
+    public boolean isAwaitingListServiceType() {
+        return awaitingListServiceType;
+    }
+
+    public void setAwaitingListServiceType(boolean awaitingListServiceType) {
+        this.awaitingListServiceType = awaitingListServiceType;
+    }
 
     public String getReportType() {
         return reportType;
