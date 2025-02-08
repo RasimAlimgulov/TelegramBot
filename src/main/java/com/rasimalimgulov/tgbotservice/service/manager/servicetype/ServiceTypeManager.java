@@ -46,19 +46,19 @@ public class ServiceTypeManager extends AbstractManager {
         String callbackData = callbackQuery.getData();
         Long chatId = callbackQuery.getMessage().getChatId();
         UserSession session = userSessionManager.getSession(chatId);
-        if (callbackData.contains("serviceType_")){
+        if (callbackData.contains("serviceType_")) {
             session.setAwaitingNewServiceType(false);
             session.setServiceTypeName(callbackData.split("_")[1]);
-            userSessionManager.updateSession(chatId,session);
-            return answerMethodFactory.getSendMessage(chatId,"Тип данных добавлен успешно. Имя клиента: " +
-                            ""+session.getNewClientName()+" Номер телефона: "+session.getNewClientPhone()+" Тип услуги: "+session.getServiceTypeName()
-                    ,keyboardFactory.getInlineKeyboardMarkup(List.of("Подтвердить"),List.of(1),List.of(ADD_CLIENT_REQUEST)));
+            userSessionManager.updateSession(chatId, session);
+            return answerMethodFactory.getSendMessage(chatId, "Тип данных добавлен успешно. Имя клиента: " +
+                            "" + session.getNewClientName() + " Номер телефона: " + session.getNewClientPhone() + " Тип услуги: " + session.getServiceTypeName()
+                    , keyboardFactory.getInlineKeyboardMarkup(List.of("Подтвердить"), List.of(1), List.of(ADD_CLIENT_REQUEST)));
         }
         switch (callbackData) {
-            case ADD_TYPE_SERVICE ->{
-                  session.setAwaitingNewServiceType(true);
-                  userSessionManager.updateSession(chatId,session);
-                  return answerMethodFactory.getSendMessage(chatId,"Введите название нового типа услуги",null);
+            case ADD_TYPE_SERVICE -> {
+                session.setAwaitingNewServiceType(true);
+                userSessionManager.updateSession(chatId, session);
+                return answerMethodFactory.getSendMessage(chatId, "Введите название нового типа услуги", null);
             }
         }
         return null;
@@ -69,30 +69,31 @@ public class ServiceTypeManager extends AbstractManager {
         Long chatId = message.getChatId();
         UserSession session = userSessionManager.getSession(chatId);
         if (session.isAwaitingNewServiceType()) {
-            String newServiceType=message.getText();
-           ServiceType serviceType=null;
+            String newServiceType = message.getText();
+            ServiceType serviceType = null;
             try {
-                serviceType=webFluxBuilder.addNewServiceType(session.getUsername(),newServiceType,session.getJwt());
+                serviceType = webFluxBuilder.addNewServiceType(session.getUsername(), newServiceType, session.getJwt());
                 session.setAwaitingNewServiceType(false);
                 session.setServiceTypeName(newServiceType);
                 session.setAwaitingListServiceType(true);
-                userSessionManager.updateSession(chatId,session);
+                userSessionManager.updateSession(chatId, session);
                 log.info(serviceType);
-            }
-            catch (WebClientResponseException.BadRequest e){
-                return answerMethodFactory.getSendMessage(chatId,"Тип услуги уже существует." +
-                        " Отправьте новое название или выберите существующий \uD83D\uDC47."
-                        ,keyboardFactory.getInlineKeyboardMarkup(List.of(newServiceType,"Главное меню"),List.of(2),List.of("serviceType_"+newServiceType,MAIN_PAGE)));
-            }
-            catch (Exception e){
+            } catch (WebClientResponseException.Unauthorized e) {
+                return answerMethodFactory.getSendMessage(chatId, "У вас закончилась сессия. Чтобы продолжить работу войдите в свой аккаунт.",
+                        keyboardFactory.getInlineKeyboardMarkup(List.of("Войти"), List.of(1), List.of(LOGIN)));
+            } catch (WebClientResponseException.BadRequest e) {
+                return answerMethodFactory.getSendMessage(chatId, "Тип услуги уже существует." +
+                                " Отправьте новое название или выберите существующий \uD83D\uDC47."
+                        , keyboardFactory.getInlineKeyboardMarkup(List.of(newServiceType, "Главное меню"), List.of(2), List.of("serviceType_" + newServiceType, MAIN_PAGE)));
+            } catch (Exception e) {
                 log.error(e);
-                return answerMethodFactory.getSendMessage(chatId,"Произошла ошибка при добавлении типа услуг.",
-                        keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню"),List.of(1),List.of(MAIN_PAGE)));
+                return answerMethodFactory.getSendMessage(chatId, "Произошла ошибка при добавлении типа услуг.",
+                        keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню"), List.of(1), List.of(MAIN_PAGE)));
             }
 
 
-        return answerMethodFactory.getSendMessage(chatId,"Тип услуг добавлен успешно"
-                    ,keyboardFactory.getInlineKeyboardMarkup(List.of("Выбрать тип услуг"),List.of(1),List.of(ADD_CLIENT_CONFIG)));
+            return answerMethodFactory.getSendMessage(chatId, "Тип услуг добавлен успешно"
+                    , keyboardFactory.getInlineKeyboardMarkup(List.of("Выбрать тип услуг"), List.of(1), List.of(ADD_CLIENT_CONFIG)));
 
         }
         return null;

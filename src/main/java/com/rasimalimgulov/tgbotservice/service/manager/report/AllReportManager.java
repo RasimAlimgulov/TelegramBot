@@ -13,6 +13,7 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
@@ -67,7 +68,12 @@ public class AllReportManager extends AbstractManager {
         byte[] fileData = null;
         try {
            fileData= webFluxBuilder.downloadTotalReport(session.getUsername(), session.getJwt());
-        }catch (Exception e){
+        }
+        catch (WebClientResponseException.Unauthorized e){
+            return methodFactory.getSendMessage(chatId,"У вас закончилась сессия. Чтобы продолжить работу войдите в свой аккаунт.",
+                    keyboardFactory.getInlineKeyboardMarkup(List.of("Войти"),List.of(1),List.of(LOGIN)));
+        }
+        catch (Exception e){
             return methodFactory.getSendMessage(chatId,"Произошла ошибка при запросе на получение отчёта",
                     keyboardFactory.getInlineKeyboardMarkup(List.of("Создать новый отчет","Главное меню"),List.of(1,1),List.of(REPORT,MAIN_PAGE)));
 

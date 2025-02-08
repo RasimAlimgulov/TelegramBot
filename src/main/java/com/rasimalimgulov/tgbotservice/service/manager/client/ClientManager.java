@@ -121,7 +121,7 @@ public class ClientManager extends AbstractManager {
                     keyboardFactory.getInlineKeyboardMarkup(List.of("Указать сумму прибыли"), List.of(1), List.of(MONEY_COUNT)));
         }catch (WebClientResponseException.Unauthorized e){
             return answerMethodFactory.getSendMessage(chatId,"У вас закончилась сессия. Чтобы продолжить работу войдите в свой аккаунт.",
-                    keyboardFactory.getInlineKeyboardMarkup(List.of("Войти"),List.of(1),List.of(MAIN_PAGE)));
+                    keyboardFactory.getInlineKeyboardMarkup(List.of("Войти"),List.of(1),List.of(LOGIN)));
         }
         catch (WebClientResponseException.BadRequest e ) {
             log.error("Ошибка при добавлении клиента: {}", e.getMessage());
@@ -149,7 +149,12 @@ public class ClientManager extends AbstractManager {
         List<ServiceType> serviceTypes;
         try {
             serviceTypes = webFluxBuilder.getServiceTypesByUsername(session.getUsername(), session.getJwt());
-        } catch (Exception e) {
+        }
+        catch (WebClientResponseException.Unauthorized e){
+            return answerMethodFactory.getSendMessage(chatId,"У вас закончилась сессия. Чтобы продолжить работу войдите в свой аккаунт.",
+                    keyboardFactory.getInlineKeyboardMarkup(List.of("Войти"),List.of(1),List.of(LOGIN)));
+        }
+        catch (Exception e) {
             log.error("Ошибка при получении типов услуг: {}", e.getMessage());
             return answerMethodFactory.getSendMessage(chatId,"Произошла ошибка при получении типов услуг.",
                     keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню"),List.of(1),List.of(MAIN_PAGE)));

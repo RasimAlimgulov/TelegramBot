@@ -13,6 +13,7 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
@@ -33,6 +34,7 @@ public class ExpenseReportManager extends AbstractManager {
     final UserSessionManager userSessionManager;
     final WebFluxBuilder webFluxBuilder;
     final SendExcelFile sendExcelFile;
+
     public ExpenseReportManager(AnswerMethodFactory methodFactory, KeyboardFactory keyboardFactory, UserSessionManager userSessionManager, WebFluxBuilder webFluxBuilder, SendExcelFile sendExcelFile) {
         this.methodFactory = methodFactory;
         this.keyboardFactory = keyboardFactory;
@@ -51,28 +53,32 @@ public class ExpenseReportManager extends AbstractManager {
         switch (callbackData) {
             case EXPENSE_REPORT: {
                 session.setReportType(EXPENSE_REPORT);
-                userSessionManager.updateSession(chatId,session);
-                return methodFactory.getSendMessage(chatId," Выберите период для отчета:", keyboardFactory.getInlineKeyboardMarkup(
-                        List.of("За сегодня","За неделю","За месяц","Произвольный период"),
-                        List.of(2,2),
-                        List.of(DAY,WEEK,MONTH,USER_PERIOD)));
+                userSessionManager.updateSession(chatId, session);
+                return methodFactory.getSendMessage(chatId, " Выберите период для отчета:", keyboardFactory.getInlineKeyboardMarkup(
+                        List.of("За сегодня", "За неделю", "За месяц", "Произвольный период"),
+                        List.of(2, 2),
+                        List.of(DAY, WEEK, MONTH, USER_PERIOD)));
             }
-            case EXPENSE_REPORT_BY_CATEGORY:{
-             return sendExpenseReportByCategories(session,chatId,bot);
+            case EXPENSE_REPORT_BY_CATEGORY: {
+                return sendExpenseReportByCategories(session, chatId, bot);
             }
             default:
                 return null;
         }
     }
-    public BotApiMethod<?> sendExpenseReportByCategories(UserSession session, Long chatId,Bot bot) {
+
+    public BotApiMethod<?> sendExpenseReportByCategories(UserSession session, Long chatId, Bot bot) {
         byte[] fileData = null;
         try {
-           fileData= webFluxBuilder.downloadExpenseReportByCategories(session.getUsername(), session.getJwt());
-        }catch (Exception e){
-            return methodFactory.getSendMessage(chatId,"Произошла ошибка при запросе на получение отчёта",
-                    keyboardFactory.getInlineKeyboardMarkup(List.of("Создать новый отчет","Главное меню"),List.of(1,1),List.of(REPORT,MAIN_PAGE)));
+            fileData = webFluxBuilder.downloadExpenseReportByCategories(session.getUsername(), session.getJwt());
+        } catch (WebClientResponseException.Unauthorized e) {
+            return methodFactory.getSendMessage(chatId, "У вас закончилась сессия. Чтобы продолжить работу войдите в свой аккаунт.",
+                    keyboardFactory.getInlineKeyboardMarkup(List.of("Войти"), List.of(1), List.of(LOGIN)));
+        } catch (Exception e) {
+            return methodFactory.getSendMessage(chatId, "Произошла ошибка при запросе на получение отчёта",
+                    keyboardFactory.getInlineKeyboardMarkup(List.of("Создать новый отчет", "Главное меню"), List.of(1, 1), List.of(REPORT, MAIN_PAGE)));
         }
-        return sendExcelFile.sendFileToBot(chatId,fileData,bot,methodFactory,keyboardFactory);
+        return sendExcelFile.sendFileToBot(chatId, fileData, bot, methodFactory, keyboardFactory);
     }
 
     @Override

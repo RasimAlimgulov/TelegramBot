@@ -11,6 +11,7 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -49,10 +50,13 @@ public class ExpenseTransactionManager extends AbstractManager {
                 try {
                     log.info("Выполняется try catch");
                     transactionResult = webFluxBuilder.addNewTransactionOutcome(session);
+                } catch (WebClientResponseException.Unauthorized e) {
+                    return answerMethodFactory.getSendMessage(chatId, "У вас закончилась сессия. Чтобы продолжить работу войдите в свой аккаунт.",
+                            keyboardFactory.getInlineKeyboardMarkup(List.of("Войти"), List.of(1), List.of(LOGIN)));
                 } catch (Exception e) {
                     log.info("Ошибка возникла при отправке запроса на транзакцию расхода" + e.getMessage() + e.getCause());
-                    return answerMethodFactory.getSendMessage(chatId,"Произошла ошибка при отправке запроса на транзакцию расхода",
-                            keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню"),List.of(1),List.of(MAIN_PAGE)));
+                    return answerMethodFactory.getSendMessage(chatId, "Произошла ошибка при отправке запроса на транзакцию расхода",
+                            keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню"), List.of(1), List.of(MAIN_PAGE)));
                 }
                 log.info(transactionResult);
                 session.cleanSessionMainPage(); ////// Очищаем сессию

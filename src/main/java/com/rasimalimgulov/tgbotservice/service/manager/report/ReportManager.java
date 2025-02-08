@@ -14,6 +14,7 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -55,16 +56,16 @@ public class ReportManager extends AbstractManager {
 
             case OUTCOME:
                 session.setTransactionType(TransactionType.EXPENSE);
-              return outcomeMethod(callbackQuery, chatId, session);
+                return outcomeMethod(callbackQuery, chatId, session);
 
             case REPORT:
                 return methodFactory.getSendMessage(
                         callbackQuery.getMessage().getChatId(),
                         "Выберите тип отчета:",
                         keyboardFactory.getInlineKeyboardMarkup(
-                                List.of("Отчет по прибыли","Отчет по расходам","Все транзакции"),
+                                List.of("Отчет по прибыли", "Отчет по расходам", "Все транзакции"),
                                 List.of(3),
-                                List.of(INCOME_REPORT,EXPENSE_REPORT,ALL_REPORT)
+                                List.of(INCOME_REPORT, EXPENSE_REPORT, ALL_REPORT)
                         )
                 );
 
@@ -79,11 +80,14 @@ public class ReportManager extends AbstractManager {
         List<Client> expenseCategies;
         try {
             expenseCategies = webFluxBuilder.getClients(session.getUsername(), session.getJwt());
+        } catch (WebClientResponseException.Unauthorized e) {
+            return methodFactory.getSendMessage(chatId, "У вас закончилась сессия. Чтобы продолжить работу войдите в свой аккаунт.",
+                    keyboardFactory.getInlineKeyboardMarkup(List.of("Войти"), List.of(1), List.of(LOGIN)));
         } catch (Exception e) {
 //            if (e.getMessage()== HttpStatus.)
             log.error("Ошибка при получении списка клиентов: {}", e.getMessage());
-            return methodFactory.getSendMessage(chatId,"Произошла ошибка при запросе на получение списка клиентов.",
-                    keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню"),List.of(1),List.of(MAIN_PAGE)));
+            return methodFactory.getSendMessage(chatId, "Произошла ошибка при запросе на получение списка клиентов.",
+                    keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню"), List.of(1), List.of(MAIN_PAGE)));
         }
 
         if (expenseCategies.isEmpty()) {
@@ -103,8 +107,8 @@ public class ReportManager extends AbstractManager {
                 .map(client -> "client_" + client.getId()) // Генерируем уникальное callbackData для каждого клиента
                 .collect(Collectors.toList());
         clientCallbacks.add(ADD_CLIENT_CONFIG);
-        log.info("Список кнопок"+clientCallbacks);
-        List<Integer> rows=new ArrayList<>();
+        log.info("Список кнопок" + clientCallbacks);
+        List<Integer> rows = new ArrayList<>();
         for (int i = 0; i < clientNames.size(); i++) {
             rows.add(1);
         }
@@ -120,15 +124,18 @@ public class ReportManager extends AbstractManager {
     }
 
     private BotApiMethod<?> outcomeMethod(CallbackQuery callbackQuery, Long chatId, UserSession session) {
-        List<ExpenseCategory> expenseCategories=null;
+        List<ExpenseCategory> expenseCategories = null;
         try {
             log.info(session.getUsername());
-        expenseCategories=webFluxBuilder.getExpenseCategories(session.getUsername(), session.getJwt());
-        log.info(expenseCategories);
-        }catch (Exception e) {
+            expenseCategories = webFluxBuilder.getExpenseCategories(session.getUsername(), session.getJwt());
+            log.info(expenseCategories);
+        } catch (WebClientResponseException.Unauthorized e) {
+            return methodFactory.getSendMessage(chatId, "У вас закончилась сессия. Чтобы продолжить работу войдите в свой аккаунт.",
+                    keyboardFactory.getInlineKeyboardMarkup(List.of("Войти"), List.of(1), List.of(LOGIN)));
+        } catch (Exception e) {
             log.error(e.getMessage());
-            return methodFactory.getSendMessage(chatId,"Произошла ошибка при запросе на получении списка Категорий затрат.",
-                    keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню"),List.of(1),List.of(MAIN_PAGE)));
+            return methodFactory.getSendMessage(chatId, "Произошла ошибка при запросе на получении списка Категорий затрат.",
+                    keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню"), List.of(1), List.of(MAIN_PAGE)));
         }
         List<String> categoriesNames = expenseCategories.stream()
                 .map(ExpenseCategory::getName)
@@ -141,7 +148,7 @@ public class ReportManager extends AbstractManager {
                 .map(category -> "category_" + category.getName()) // Генерируем уникальное callbackData для каждого клиента
                 .collect(Collectors.toList());
         categoriesCallbacks.add(ADD_EXPENSE_CATEGORY);
-        List<Integer> rows=new ArrayList<>();
+        List<Integer> rows = new ArrayList<>();
         for (int i = 0; i < categoriesCallbacks.size(); i++) {
             rows.add(1);
         }
@@ -156,6 +163,7 @@ public class ReportManager extends AbstractManager {
         );
 
     }
+
     @Override
     public BotApiMethod<?> answerMessage(Message message, Bot bot) {
         Long chatId = message.getChatId();
@@ -172,8 +180,11 @@ public class ReportManager extends AbstractManager {
                     return methodFactory.getSendMessage(chatId, "Успешно добавили прибыль.", null);
                 } else {
                     return methodFactory.getSendMessage(chatId, "Не получилось добавить прибыль."
-                            ,keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню"),List.of(1),List.of(MAIN_PAGE)));
+                            , keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню"), List.of(1), List.of(MAIN_PAGE)));
                 }
+            } catch (WebClientResponseException.Unauthorized e) {
+                return methodFactory.getSendMessage(chatId, "У вас закончилась сессия. Чтобы продолжить работу войдите в свой аккаунт.",
+                        keyboardFactory.getInlineKeyboardMarkup(List.of("Войти"), List.of(1), List.of(LOGIN)));
             } catch (Exception e) {
                 log.info("Произошла ошибка при отправке: " + e.getMessage());
             }

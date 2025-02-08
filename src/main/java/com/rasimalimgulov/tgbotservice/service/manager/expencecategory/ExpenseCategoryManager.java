@@ -48,14 +48,14 @@ public class ExpenseCategoryManager extends AbstractManager {
             String category = callbackData.split("category_")[1];
             session.setAwaitingExpenseCategory(false);
             session.setExpenseCategory(category);
-            userSessionManager.updateSession(chatId,session);
-            return answerMethodFactory.getSendMessage(chatId,"Сохранили категорию: "+category,
-                    keyboardFactory.getInlineKeyboardMarkup(List.of("Продолжить"),List.of(1),List.of(MONEY_COUNT)));
+            userSessionManager.updateSession(chatId, session);
+            return answerMethodFactory.getSendMessage(chatId, "Сохранили категорию: " + category,
+                    keyboardFactory.getInlineKeyboardMarkup(List.of("Продолжить"), List.of(1), List.of(MONEY_COUNT)));
         }
         switch (callbackData) {
             case ADD_EXPENSE_CATEGORY -> {
                 session.setAwaitingExpenseCategory(true);
-                userSessionManager.updateSession(chatId,session);
+                userSessionManager.updateSession(chatId, session);
                 return answerMethodFactory.getSendMessage(chatId, "Введите название новой категории расходов", null);
             }
         }
@@ -66,27 +66,29 @@ public class ExpenseCategoryManager extends AbstractManager {
     public BotApiMethod<?> answerMessage(Message message, Bot bot) {
         Long chatId = message.getChatId();
         UserSession session = userSessionManager.getSession(chatId);
-        if (session.getAwaitingExpenseCategory()){
-            ExpenseCategory expenseCategory=null;
+        if (session.getAwaitingExpenseCategory()) {
+            ExpenseCategory expenseCategory = null;
             try {
-                expenseCategory= webFluxBuilder.addNewExpenseCategory(message.getText(),session.getUsername(),session.getJwt());
+                expenseCategory = webFluxBuilder.addNewExpenseCategory(message.getText(), session.getUsername(), session.getJwt());
                 session.setAwaitingExpenseCategory(false);
                 session.setExpenseCategory(message.getText());
-                userSessionManager.updateSession(chatId,session);
-            } catch (WebClientResponseException.BadRequest e){
+                userSessionManager.updateSession(chatId, session);
+            } catch (WebClientResponseException.Unauthorized e) {
+                return answerMethodFactory.getSendMessage(chatId, "У вас закончилась сессия. Чтобы продолжить работу войдите в свой аккаунт.",
+                        keyboardFactory.getInlineKeyboardMarkup(List.of("Войти"), List.of(1), List.of(LOGIN)));
+            } catch (WebClientResponseException.BadRequest e) {
                 log.info(e.getMessage());
-                return answerMethodFactory.getSendMessage(chatId,"Категория расходов уже существует." +
+                return answerMethodFactory.getSendMessage(chatId, "Категория расходов уже существует." +
                                 " Отправьте новое название или выберите существующую \uD83D\uDC47."
-                        ,keyboardFactory.getInlineKeyboardMarkup(
-                                List.of(message.getText(),"Главное меню"),List.of(2),List.of("category_"+message.getText(),MAIN_PAGE)));
-            }
-            catch (Exception e){
+                        , keyboardFactory.getInlineKeyboardMarkup(
+                                List.of(message.getText(), "Главное меню"), List.of(2), List.of("category_" + message.getText(), MAIN_PAGE)));
+            } catch (Exception e) {
                 log.error(e.getMessage());
-                return answerMethodFactory.getSendMessage(chatId,"Произошла ошибка при добавлении категории расходов.",
-                        keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню"),List.of(1),List.of(MAIN_PAGE)));
+                return answerMethodFactory.getSendMessage(chatId, "Произошла ошибка при добавлении категории расходов.",
+                        keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню"), List.of(1), List.of(MAIN_PAGE)));
             }
-            return answerMethodFactory.getSendMessage(chatId,"Успешно добавили новую категорию",
-                    keyboardFactory.getInlineKeyboardMarkup(List.of("Выбрать категорию"),List.of(1),List.of(OUTCOME)));
+            return answerMethodFactory.getSendMessage(chatId, "Успешно добавили новую категорию",
+                    keyboardFactory.getInlineKeyboardMarkup(List.of("Выбрать категорию"), List.of(1), List.of(OUTCOME)));
         }
 
         return null;
