@@ -12,6 +12,7 @@ public class UserSession {
 
     private String newClientName;
     private String newClientPhone;
+
     private String serviceTypeName;
 
 
@@ -68,6 +69,8 @@ public class UserSession {
         this.setTransactionStatus(null);
 
     }
+
+
 
     public boolean isAwaitingNewLogin() {
         return awaitingNewLogin;

@@ -13,6 +13,8 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -20,6 +22,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.rasimalimgulov.tgbotservice.service.data.CallbackData.*;
@@ -67,12 +70,21 @@ public class ClientManager extends AbstractManager {
             return handleClientNameInput(chatId, session, text);
         }
         if (session.isAwaitingPhoneNewClient()) {
+            Optional<Client> clientByPhone= webFluxBuilder.checkPhoneClient(session.getUsername(),text,session.getJwt());
+            if (!clientByPhone.isEmpty()) {
+                return answerMethodFactory.getSendMessage(chatId,"Клиент с таким номером уже существует." +
+                        " Отправьте другой номер или выберите существующего \uD83D\uDC47.",
+                        keyboardFactory.getInlineKeyboardMarkup(List.of(clientByPhone.get().getFullName(),"Главное меню"),List.of(1,1),List.of("client_"+clientByPhone.get().getId(),MAIN_PAGE))
+                      );
+            }
+            //////////////////Здесь делаю запрос на проверку существования клиента с таким номером. Если существует прошу ввести другой номер или использовать уже существующего.
             return handleClientPhoneInput(chatId, session, text);
         }
         return null;
     }
 
     private BotApiMethod<?> handleClientSelection(Long chatId, UserSession session, String callbackData) {
+        session.setAwaitingPhoneNewClient(false);
         session.setAwaitingAmountMoney(true);
         session.setTransaction_client_id(Long.parseLong(callbackData.split("_")[1]));
         return answerMethodFactory.getSendMessage(chatId, "Укажите сумму прибыли", null);
@@ -107,9 +119,13 @@ public class ClientManager extends AbstractManager {
             userSessionManager.updateSession(chatId, session);
             return answerMethodFactory.getSendMessage(chatId, "Успешно добавили нового клиента: " + client,
                     keyboardFactory.getInlineKeyboardMarkup(List.of("Указать сумму прибыли"), List.of(1), List.of(MONEY_COUNT)));
-        } catch (Exception e) {
+        }catch (WebClientResponseException.Unauthorized e){
+            return answerMethodFactory.getSendMessage(chatId,"У вас закончилась сессия. Чтобы продолжить работу войдите в свой аккаунт.",
+                    keyboardFactory.getInlineKeyboardMarkup(List.of("Войти"),List.of(1),List.of(MAIN_PAGE)));
+        }
+        catch (WebClientResponseException.BadRequest e ) {
             log.error("Ошибка при добавлении клиента: {}", e.getMessage());
-            return answerMethodFactory.getSendMessage(chatId,"Произошла ошибка при добавлении клиента.",
+            return answerMethodFactory.getSendMessage(chatId,e.getResponseBodyAsString(),
                     keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню"),List.of(1),List.of(MAIN_PAGE)));
         }
     }
@@ -144,7 +160,7 @@ public class ClientManager extends AbstractManager {
         }
         List<String> typeNames = serviceTypes.stream().map(ServiceType::getName).collect(Collectors.toList());
         List<String> typeCallbacks = serviceTypes.stream()
-                .map(serviceType -> "serviceType_" + serviceType.getId() + "_" + serviceType.getName())
+                .map(serviceType -> "serviceType_" + "_" + serviceType.getName())
                 .collect(Collectors.toList());
         typeNames.add("Добавить");
         typeCallbacks.add(ADD_TYPE_SERVICE);

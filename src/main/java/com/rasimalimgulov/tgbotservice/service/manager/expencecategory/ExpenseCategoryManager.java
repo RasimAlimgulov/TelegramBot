@@ -12,6 +12,7 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -45,9 +46,10 @@ public class ExpenseCategoryManager extends AbstractManager {
         UserSession session = userSessionManager.getSession(chatId);
         if (callbackData.contains("category_")) {
             String category = callbackData.split("category_")[1];
+            session.setAwaitingExpenseCategory(false);
             session.setExpenseCategory(category);
             userSessionManager.updateSession(chatId,session);
-            return answerMethodFactory.getSendMessage(chatId,"Сохранили категорию"+category,
+            return answerMethodFactory.getSendMessage(chatId,"Сохранили категорию: "+category,
                     keyboardFactory.getInlineKeyboardMarkup(List.of("Продолжить"),List.of(1),List.of(MONEY_COUNT)));
         }
         switch (callbackData) {
@@ -65,18 +67,24 @@ public class ExpenseCategoryManager extends AbstractManager {
         Long chatId = message.getChatId();
         UserSession session = userSessionManager.getSession(chatId);
         if (session.getAwaitingExpenseCategory()){
-            session.setExpenseCategory(message.getText());
-            session.setAwaitingExpenseCategory(false);
-           userSessionManager.updateSession(chatId,session);
             ExpenseCategory expenseCategory=null;
             try {
-                expenseCategory= webFluxBuilder.addNewExpenseCategory(session.getExpenseCategory(),session.getUsername(),session.getJwt());
-            }catch (Exception e){
+                expenseCategory= webFluxBuilder.addNewExpenseCategory(message.getText(),session.getUsername(),session.getJwt());
+                session.setAwaitingExpenseCategory(false);
+                session.setExpenseCategory(message.getText());
+                userSessionManager.updateSession(chatId,session);
+            } catch (WebClientResponseException.BadRequest e){
+                log.info(e.getMessage());
+                return answerMethodFactory.getSendMessage(chatId,"Категория расходов уже существует." +
+                                " Отправьте новое название или выберите существующую \uD83D\uDC47."
+                        ,keyboardFactory.getInlineKeyboardMarkup(
+                                List.of(message.getText(),"Главное меню"),List.of(2),List.of("category_"+message.getText(),MAIN_PAGE)));
+            }
+            catch (Exception e){
                 log.error(e.getMessage());
                 return answerMethodFactory.getSendMessage(chatId,"Произошла ошибка при добавлении категории расходов.",
                         keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню"),List.of(1),List.of(MAIN_PAGE)));
             }
-            log.info("Получили "+expenseCategory.toString());
             return answerMethodFactory.getSendMessage(chatId,"Успешно добавили новую категорию",
                     keyboardFactory.getInlineKeyboardMarkup(List.of("Выбрать категорию"),List.of(1),List.of(OUTCOME)));
         }

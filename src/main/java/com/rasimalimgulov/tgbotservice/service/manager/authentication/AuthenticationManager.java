@@ -10,7 +10,11 @@ import com.rasimalimgulov.tgbotservice.telegram.Bot;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -60,32 +64,37 @@ public class AuthenticationManager extends AbstractManager {
             session.setAwaitingPassword(true);//Ожидаем ввод пароля
             userSessionManager.updateSession(chatId, session);
             return methodFactory.getSendMessage(chatId, "Введите пароль:", null);
-        } else if (session.isAwaitingPassword()) { // Если ожидается ввод пароля получаем логин из сессии и пароль из пришедшего сообщения
+        } else if (session.isAwaitingPassword()) {
+            // Если ожидается ввод пароля получаем логин из сессии и пароль из пришедшего сообщения
             String login = session.getUsername();
             String password = message.getText();
-            String jwt = null;
             try {
-                jwt = webClient.authenticateRequest(login, password);  // Отправляем запрос на API для аутентификации и получаем jwt при успешном аутен...
-                log.info("Получен jwt токен: " + jwt);
+                // Попытка аутентификации
+                ResponseEntity<String> jwtResponse = webClient.authenticateRequest(login, password);
+                session.setAwaitingPassword(false);
+                userSessionManager.updateSession(chatId, session);
+                // Если исключений нет, значит аутентификация прошла успешно
+                String responseBody = jwtResponse.getBody();
+                session.setJwt(responseBody); // Сохраняем JWT в сессию
+                userSessionManager.updateSession(chatId, session); // Обновляем сессию
+
+                // Возвращаем успешное сообщение
+                return methodFactory.getSendMessage(chatId, String.format("%s вы успешно вошли!", login),
+                        keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню"), List.of(1), List.of(MAIN_PAGE)));
+
+            } catch (WebClientResponseException.Unauthorized e) {
+                session.setAwaitingPassword(false);
+                userSessionManager.updateSession(chatId, session);
+                return methodFactory.getSendMessage(chatId, "Не верный логин или пароль.",
+                        keyboardFactory.getInlineKeyboardMarkup(List.of("Попробовать ещё раз"), List.of(1), List.of(LOGIN)));
             } catch (Exception e) {
                 session.setAwaitingPassword(false);
-                log.info("Ошибка при отправке запроса: " + e.getMessage());
-                return methodFactory.getSendMessage(chatId, "Ошибка при аутентификации на стороне сервера.",
-                        keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню"),List.of(1),List.of(MAIN_PAGE)));
+                userSessionManager.updateSession(chatId, session);
+                // Обработка других ошибок
+                log.info("Произошла ошибка: " + e.getMessage());
+                return methodFactory.getSendMessage(chatId, "Ошибка при запросе. Попробуйте позже.",
+                        keyboardFactory.getInlineKeyboardMarkup(List.of("Попробовать ещё раз"), List.of(1), List.of(LOGIN)));
             }
-            if (jwt != null) {
-                session.setJwt(jwt);
-                session.setAwaitingPassword(false);
-                userSessionManager.updateSession(chatId, session); // Сохраняем jwt в сессию.
-                return methodFactory.getSendMessage(chatId, String.format("%s вы успешно вошли!", login),
-                        keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню")
-                                , List.of(1), List.of(MAIN_PAGE)));
-            } else {
-                session.setAwaitingPassword(false);
-                userSessionManager.updateSession(chatId,session);
-                return methodFactory.getSendMessage(chatId, "Не верный логин или пароль!", null);
-            }
-
         }
 
         return methodFactory.getSendMessage(chatId, "Для начала авторизации нажмите кнопку 'Войти'.", null);

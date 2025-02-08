@@ -12,6 +12,7 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -46,7 +47,8 @@ public class ServiceTypeManager extends AbstractManager {
         Long chatId = callbackQuery.getMessage().getChatId();
         UserSession session = userSessionManager.getSession(chatId);
         if (callbackData.contains("serviceType_")){
-            session.setServiceTypeName(callbackData.split("_")[2]);
+            session.setAwaitingNewServiceType(false);
+            session.setServiceTypeName(callbackData.split("_")[1]);
             userSessionManager.updateSession(chatId,session);
             return answerMethodFactory.getSendMessage(chatId,"Тип данных добавлен успешно. Имя клиента: " +
                             ""+session.getNewClientName()+" Номер телефона: "+session.getNewClientPhone()+" Тип услуги: "+session.getServiceTypeName()
@@ -71,16 +73,23 @@ public class ServiceTypeManager extends AbstractManager {
            ServiceType serviceType=null;
             try {
                 serviceType=webFluxBuilder.addNewServiceType(session.getUsername(),newServiceType,session.getJwt());
-            }catch (Exception e){
+                session.setAwaitingNewServiceType(false);
+                session.setServiceTypeName(newServiceType);
+                session.setAwaitingListServiceType(true);
+                userSessionManager.updateSession(chatId,session);
+                log.info(serviceType);
+            }
+            catch (WebClientResponseException.BadRequest e){
+                return answerMethodFactory.getSendMessage(chatId,"Тип услуги уже существует." +
+                        " Отправьте новое название или выберите существующий \uD83D\uDC47."
+                        ,keyboardFactory.getInlineKeyboardMarkup(List.of(newServiceType,"Главное меню"),List.of(2),List.of("serviceType_"+newServiceType,MAIN_PAGE)));
+            }
+            catch (Exception e){
                 log.error(e);
                 return answerMethodFactory.getSendMessage(chatId,"Произошла ошибка при добавлении типа услуг.",
                         keyboardFactory.getInlineKeyboardMarkup(List.of("Главное меню"),List.of(1),List.of(MAIN_PAGE)));
             }
-            session.setAwaitingNewServiceType(false);
-            session.setServiceTypeName(newServiceType);
-            session.setAwaitingListServiceType(true);
-            userSessionManager.updateSession(chatId,session);
-            log.info(serviceType);
+
 
         return answerMethodFactory.getSendMessage(chatId,"Тип услуг добавлен успешно"
                     ,keyboardFactory.getInlineKeyboardMarkup(List.of("Выбрать тип услуг"),List.of(1),List.of(ADD_CLIENT_CONFIG)));

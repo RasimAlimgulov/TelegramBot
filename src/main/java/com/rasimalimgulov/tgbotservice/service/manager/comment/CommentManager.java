@@ -62,16 +62,16 @@ public class CommentManager extends AbstractManager {
             session.setComment(comment);
             switch (session.getTransactionType()) {
                 case INCOME -> {
-                    return answerMethodFactory.getSendMessage(chatId, "Подтвердите создание дохода: " + "client_id=" + session.getTransaction_client_id() + " money_count=" + session.getAmountMoney()
-                                    + " тип денег=" + session.getMoneyType() + " тип услуги=" + session.getServiceTypeName()
-                                    + " статус транзакции=" + session.getTransactionStatus() + " Комментарий=" + session.getComment(),
-                            keyboardFactory.getInlineKeyboardMarkup(List.of("Подтвердить"), List.of(1), List.of(TRANSACTION_INCOME_REQUEST)));
+                    return answerMethodFactory.getSendMessage(chatId, "Подтвердите создание дохода: " + "Сlient_id = " + session.getTransaction_client_id() + " money_count=" + session.getAmountMoney()
+                                    + " Вид оплаты = " + session.getMoneyType()
+                                    + " Статус транзакции = " + session.getTransactionStatus() + " Комментарий = " + session.getComment(),
+                            keyboardFactory.getInlineKeyboardMarkup(List.of("Подтвердить","Отмена"), List.of(2), List.of(TRANSACTION_INCOME_REQUEST,MAIN_PAGE)));
                 }
                 case EXPENSE -> {
-                    return answerMethodFactory.getSendMessage(chatId, "Подтвердите создание расхода: " + "client_id=" + session.getTransaction_client_id() + " money_count=" + session.getAmountMoney()
-                                    + " тип денег=" + session.getMoneyType() + "категория расхода" + session.getExpenseCategory()
-                                    + " Комментарий=" + session.getComment(),
-                            keyboardFactory.getInlineKeyboardMarkup(List.of("Подтвердить"), List.of(1), List.of(TRANSACTION_OUTCOME_REQUEST)));
+                    return answerMethodFactory.getSendMessage(chatId, "Подтвердите создание расхода: " + " Money_count = " + session.getAmountMoney()
+                                    + " Вид оплаты = " + session.getMoneyType() + " Категория расхода = " + session.getExpenseCategory()
+                                    + " Комментарий = " + session.getComment(),
+                            keyboardFactory.getInlineKeyboardMarkup(List.of("Подтвердить","Отмена"), List.of(2), List.of(TRANSACTION_OUTCOME_REQUEST,MAIN_PAGE)));
 
                 }
             }

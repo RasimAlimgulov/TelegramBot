@@ -88,7 +88,7 @@ public class ReportManager extends AbstractManager {
 
         if (expenseCategies.isEmpty()) {
             return methodFactory.getSendMessage(chatId, "У вас пока нет клиентов. Создайте нового клиента."
-                    , keyboardFactory.getInlineKeyboardMarkup(List.of("Добавить клиента"), List.of(1), List.of("add_client")));
+                    , keyboardFactory.getInlineKeyboardMarkup(List.of("Добавить клиента"), List.of(1), List.of(ADD_CLIENT_CONFIG)));
         }
 
         // Формирование списка клиентов для inline-клавиатуры
@@ -122,7 +122,9 @@ public class ReportManager extends AbstractManager {
     private BotApiMethod<?> outcomeMethod(CallbackQuery callbackQuery, Long chatId, UserSession session) {
         List<ExpenseCategory> expenseCategories=null;
         try {
+            log.info(session.getUsername());
         expenseCategories=webFluxBuilder.getExpenseCategories(session.getUsername(), session.getJwt());
+        log.info(expenseCategories);
         }catch (Exception e) {
             log.error(e.getMessage());
             return methodFactory.getSendMessage(chatId,"Произошла ошибка при запросе на получении списка Категорий затрат.",

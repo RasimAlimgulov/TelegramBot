@@ -4,20 +4,25 @@ import com.rasimalimgulov.tgbotservice.dto.*;
 import com.rasimalimgulov.tgbotservice.service.manager.session.UserSession;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
+import java.util.Optional;
 
 @Log4j2
 @Component
 public class WebFluxBuilder {
     private static final String urlApi = "http://localhost:8081/";
 
-    public String authenticateRequest(String username, String password) {
+    public ResponseEntity<String> authenticateRequest(String username, String password) {
         return WebClient.create(urlApi).post()
                 .uri("/authentication")
-                .bodyValue(new AuthRequest(username, password)).retrieve().bodyToMono(String.class).block();
+                .bodyValue(new AuthRequest(username, password))
+                .retrieve()
+                .toEntity(String.class) // используем toEntity вместо bodyToMono
+                .block();
     }
 
     public boolean incomeRequest(Long chatId, String jwt, Double amountMoney) {
@@ -76,6 +81,16 @@ public class WebFluxBuilder {
                 .header("Authorization", "Bearer " + jwt)
                 .retrieve()
                 .bodyToMono(Client.class).block();
+    }
+    public Optional<Client> checkPhoneClient(String username, String phoneClient, String jwt) {
+        log.info("Выполняется метод по проверке существования клиента по номеру телефона");
+
+        return WebClient.create(urlApi)
+                .post()
+                .uri("/checkclientbyphone").bodyValue(new CheckClientRequest(username, phoneClient))
+                .header("Authorization", "Bearer " + jwt)
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<Optional<Client>>(){}).block();
     }
 
     public TransactionIncome addNewTransactionIncome(UserSession session) {

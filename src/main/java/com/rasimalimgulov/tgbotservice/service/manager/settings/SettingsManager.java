@@ -66,6 +66,7 @@ public class SettingsManager extends AbstractManager {
             case CHECK_ROLES -> {
                 List<String> roles=null;
                 try {
+                    log.info(session.getUsername(),session.getJwt());
                    roles =webFluxBuilder.getRoles(session.getUsername(),session.getJwt());
                 }
                 catch (Exception e){
